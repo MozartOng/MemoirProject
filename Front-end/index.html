@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام حجز المواعيد</title>
+    <link rel="stylesheet" href="css/form.css">
+</head>
+<body>
+
+    <header>
+        <div class="header-container">
+            <img src="logo.jpg" alt="CTC" class="logo">
+            <button class="admin-login" onclick="window.location.href='admin-login.html'">تسجيل دخول </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>حجز موعد</h1>
+        <form id="appointmentForm">
+            <label for="fullName">الاسم الكامل:</label>
+            <input type="text" id="fullName" name="fullName" required>
+
+            <label for="email">البريد الإلكتروني:</label>
+            <input type="email" id="email" name="email" required>
+
+            <label for="phone">رقم الهاتف:</label>
+            <input type="tel" id="phone" name="phone" required>
+
+            <label for="role">صفة الزائر:</label>
+            <select id="role" name="role" required>
+                <option value="">اختر صفتك</option>
+                <option value="مقاول">مقاول</option>
+                <option value="صاحب مشروع">صاحب مشروع</option>
+                <option value="مكتب دراسات">مكتب دراسات</option>
+                <option value="مخبر">مخبر</option>
+            </select>
+
+            <label for="visitPurpose">زيارة بخصوص:</label>
+            <select id="visitPurpose" name="visitPurpose" required>
+                <option value="">اختر الغرض من الزيارة</option>
+                <option value="ورشة">ورشة</option>
+                <option value="ملف">ملف</option>
+                <option value="أخرى">أخرى</option>
+            </select>
+
+            <div id="additionalFields" style="display: none;">
+                <label for="visitReason">سبب الزيارة:</label>
+                <select id="visitReason" name="visitReason">
+                    <option value="">اختر سبب الزيارة</option>
+                    <option value="معاينة الحفر">معاينة الحفر</option>
+                    <option value="معاينة الأشغال">معاينة الأشغال</option>
+                    <option value="معاينة أشغال المسالك">معاينة أشغال المسالك</option>
+                    <option value="الاستلام المؤقت">الاستلام المؤقت</option>
+                    <option value="الاستلام النهائي">الاستلام النهائي</option>
+                </select>
+
+                <div id="attachmentsInfo" style="display: none; margin-top: 10px;">
+                    <p id="requiredAttachments"></p>
+                </div>
+
+                <label for="attachments">المرفقات المطلوبة:</label>
+                <input type="file" id="attachments" name="attachments" multiple>
+            </div>
+
+            <label for="companyName">اسم المؤسسة:</label>
+            <input type="text" id="companyName" name="companyName">
+
+            <label for="projectName">اسم المشروع:</label>
+            <input type="text" id="projectName" name="projectName">
+
+            <label for="projectLocation">موقع المشروع:</label>
+            <input type="text" id="projectLocation" name="projectLocation">
+
+            <label for="preferredDateTime">تاريخ وتوقيت المقابلة المطلوب:</label>
+            <input type="datetime-local" id="preferredDateTime" name="preferredDateTime" required>
+
+            <button type="submit">إرسال الطلب</button>
+        </form>
+    </div>
+    <script src="Javascript/form.js"></script>
+</body>
+</html>
