@@ -3,7 +3,7 @@ document.getElementById('role').addEventListener('change', function() {
     var visitPurpose = document.getElementById('visitPurpose').value;
     var additionalFields = document.getElementById('additionalFields');
 
-    if (role === 'مقاول' || visitPurpose === 'ورشة') {
+    if (role === 'مقاول' && visitPurpose === 'ورشة') {
         additionalFields.style.display = 'block';
     } else {
         additionalFields.style.display = 'none';
@@ -55,14 +55,39 @@ document.getElementById('visitReason').addEventListener('change', function() {
     }
 });
 
+var selectedFiles = [];
+
+document.getElementById('addFile').addEventListener('click', function() {
+    document.getElementById('fileSelector').click();
+});
+
+document.getElementById('fileSelector').addEventListener('change', function() {
+    var files = this.files;
+    for (var file of files) {
+        if (file.size > 5 * 1024 * 1024) {
+            alert('حجم الملف يجب ألا يتجاوز 5 ميغابايت');
+        } else {
+            selectedFiles.push(file);
+            var li = document.createElement('li');
+            li.appendChild(document.createTextNode(file.name));
+            document.getElementById('selectedFiles').appendChild(li);
+        }
+    }
+    this.value = '';
+})
+
 
 document.getElementById('appointmentForm').addEventListener('submit', function(event) {
     event.preventDefault();
 
-    var formData = new FormData(this);
+    var FormData = new FormData(this);
+
+    for (var file of selectedFiles) {
+        FormData.append('attachments', file);
+    }
 
     var appointmentData = {};
-    formData.forEach(function(value, key) {
+    FormData.forEach(function(value, key) {
         appointmentData[key] = value;
     });
 
@@ -71,4 +96,5 @@ document.getElementById('appointmentForm').addEventListener('submit', function(e
     alert('تم إرسال طلبك بنجاح!');
     this.reset();
     document.getElementById('additionalFields').style.display = 'none';
+    selectedFiles = [];
 });

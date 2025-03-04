@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم المسؤول - إدارة المواعيد</title>
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <header>
+        <h1>إدارة المواعيد</h1>
+    </header>
+    <main>
+        <table id="appointmentsTable">
+            <thead>
+                <tr>
+                    <th>رقم الموعد</th>
+                    <th>اسم العميل</th>
+                    <th>تاريخ الموعد</th>
+                    <th>الحالة</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- سيتم ملء البيانات هنا ديناميكيًا -->
+            </tbody>
+        </table>
+    </main>
+
+    <!-- نافذة التفاصيل -->
+    <div id="appointmentDetailsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal()">&times;</span>
+            <h2>تفاصيل الموعد</h2>
+            <p><strong>رقم الموعد:</strong> <span id="appointmentId"></span></p>
+            <p><strong>اسم العميل:</strong> <span id="clientName"></span></p>
+            <p><strong>البريد الإلكتروني:</strong> <span id="clientEmail"></span></p>
+            <p><strong>رقم الهاتف:</strong> <span id="clientPhone"></span></p>
+            <p><strong>تاريخ الموعد:</strong> <span id="appointmentDate"></span></p>
+            <p><strong>الحالة:</strong> <span id="appointmentStatus"></span></p>
+            <button id="acceptBtn">قبول الموعد</button>
+            <button id="rescheduleBtn">تأجيل الموعد</button>
+        </div>
+    </div>
+
+    <script src="Javascript/admin.js"></script>
+</body>
+</html>

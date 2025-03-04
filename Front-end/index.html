@@ -60,7 +60,9 @@
                 </div>
 
                 <label for="attachments">المرفقات المطلوبة:</label>
-                <input type="file" id="attachments" name="attachments" multiple>
+                <ul id="selectedFiles"></ul>
+                <button type="button" id="addFile">إضافة ملف</button>
+                <input type="file" id="fileSelector" multiple style="display: none;">
             </div>
 
             <label for="companyName">اسم المؤسسة:</label>
@@ -71,6 +73,10 @@
 
             <label for="projectLocation">موقع المشروع:</label>
             <input type="text" id="projectLocation" name="projectLocation">
+
+            <label for="subject">الموضوع :</label>
+            <input type="text" id="subject" name="subject">
+
 
             <label for="preferredDateTime">تاريخ وتوقيت المقابلة المطلوب:</label>
             <input type="datetime-local" id="preferredDateTime" name="preferredDateTime" required>

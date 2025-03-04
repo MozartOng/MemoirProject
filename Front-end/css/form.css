@@ -8,7 +8,7 @@ body {
 
 /* تنسيق رأس الصفحة */
 header {
-    background-color: #333;
+    background-color: blue;
     padding: 10px 0;
 }
 
@@ -79,4 +79,19 @@ button {
 
 button:hover {
     background-color: #4cae4c;
+}
+
+/* زر الاضافة*/
+#addFile {
+    background-color: #0275d8;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+#addFile:hover {
+    background-color: #025aa5;
 }
