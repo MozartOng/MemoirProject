@@ -1,0 +1,92 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+.header {
+    background-color: #28a745;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.logo-placeholder img {
+    max-width: 150px;
+    height: auto;
+    vertical-align: middle;
+}
+
+.header-actions {
+    display: flex;
+    gap: 15px;
+}
+
+.action-button {
+    padding: 8px 20px;
+    background-color: #ffffff;
+    color: #28a745;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.action-button:hover {
+    background-color: #e0e0e0;
+    color: #1e7e34;
+}
+
+.container {
+    max-width: 900px;
+    margin: 20px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px;
+}
+
+h3 {
+    color: #555;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+}
+
+.form-section {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+/* User Management Styles */
+.user-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.user-card {
+    background-color: #fff;
+    padding: 15px;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.user-details p {
+    margin: 5px 0;
+    color: #333;
+}

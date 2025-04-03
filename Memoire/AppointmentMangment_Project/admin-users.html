@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة المستخدمين</title>
+    <link rel="stylesheet" href="css/admin-users.css">
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="header">
+        <div class="logo-placeholder">
+            <img src="logo.jpg" alt="شعار الشركة">
+        </div>
+        <div class="header-actions">
+            <button class="action-button" onclick="window.location.href='admin-dashboard.html'">لوحة التحكم</button>
+            <button class="action-button" onclick="window.location.href='admin-appointments.html'">إدارة الحجوزات</button>
+            <button class="action-button" onclick="window.location.href='admin-login.html'">تسجيل خروج الإدارة</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>إدارة المستخدمين</h1>
+
+        <!-- Users Management Section -->
+        <div class="form-section">
+            <h3>قائمة المستخدمين</h3>
+            <div class="user-list" id="userList">
+                <!-- Sample User 1 -->
+                <div class="user-card">
+                    <div class="user-details">
+                        <p><strong>الاسم الكامل:</strong> أحمد محمد</p>
+                        <p><strong>البريد الإلكتروني:</strong> ahmed@example.com</p>
+                        <p><strong>الدور:</strong> مقاول</p>
+                        <p><strong>اسم الشركة:</strong> شركة البناء المثالي</p>
+                    </div>
+                </div>
+
+                <!-- Sample User 2 -->
+                <div class="user-card">
+                    <div class="user-details">
+                        <p><strong>الاسم الكامل:</strong> سارة علي</p>
+                        <p><strong>البريد الإلكتروني:</strong> sarah@example.com</p>
+                        <p><strong>الدور:</strong> مكتب الدراسات</p>
+                        <p><strong>اسم الشركة:</strong> مكتب التصميم الهندسي</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="javascript/"></script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حجز موعد</title>
+    <link rel="stylesheet" href="css/appointmentBooking.css">
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="header">
+        <div class="logo-placeholder">
+            <img src="logo.jpg" alt="">
+        </div>
+        <div class="header-actions">
+            <button class="action-button" onclick="window.location.href='appointmentStatus.html'">حالة الحجوزات</button>
+            <button class="action-button" onclick="window.location.href='login.html'">تسجيل الخروج/دخول</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>حجز موعد</h1>
+        
+        <!-- Form Wrapper -->
+        <form id="appointmentForm" class="appointment-form">
+            <!-- Role Selection -->
+            <div class="form-section">
+                <label for="role">اختر الدور:</label>
+                <select id="role" onchange="updateFields()">
+                    <option value="contractor">مقاول</option>
+                    <option value="engineering">مكتب الدراسات</option>
+                    <option value="owner">صاحب المشروع</option>
+                    <option value="lab">مخبر</option>
+                </select>
+            </div>
+
+            <!-- Project Details -->
+            <div class="form-section">
+                <h3>تفاصيل المشروع</h3>
+                <div class="form-group">
+                    <label for="projectName">اسم المشروع:</label>
+                    <input type="text" id="projectName" name="projectName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="projectLocation">موقع المشروع:</label>
+                    <input type="text" id="projectLocation" name="projectLocation" required>
+                </div>
+            </div>
+
+            <!-- Visit Reason -->
+            <div class="form-section">
+                <h3>سبب الزيارة</h3>
+                <div class="form-group">
+                    <label for="visitReason">سبب الزيارة:</label>
+                    <select id="visitReason" name="visitReason" onchange="updateFields()">
+                        <option value="none">اختر السبب</option>
+                        <option value="other">آخر</option>
+                        <option value="file">ملف</option>
+                        <option value="workshop">ورشة</option>
+                    </select>
+                </div>
+
+                <!-- File Upload for All Roles (except Contractor for "ورشة") -->
+                <div id="fileUpload" class="form-group" style="display: none;">
+                    <label>رفع ملفات (حتى 3 ملفات):</label>
+                    <input type="file" id="files" name="files" multiple accept=".pdf,.jpg,.png" max="3">
+                </div>
+
+                <!-- Special Field for "ورشة" (Contractor Only) -->
+                <div id="workshopReason" class="form-group" style="display: none;">
+                    <label for="workshopDetail">سبب الزيارة (ورشة):</label>
+                    <select id="workshopDetail" name="workshopDetail" onchange="updateFields()">
+                        <option value="none">اختر السبب</option>
+                        <option value="reexecution">معاينة الحفر</option>
+                        <option value="concreteTesting">معاينة الأشغال</option>
+                        <option value="concreteWorks">معاينة أشغال المساكة</option>
+                        <option value="soil">الاستلام المؤقت</option>
+                        <option value="notSpecified">الاستلام النهائي</option>
+                    </select>
+
+                    <!-- File Upload Fields for Each Workshop Reason -->
+                    <div id="workshopFiles" class="file-upload-section" style="display: none;">
+                        <!-- معاينة الحفر -->
+                        <div id="reexecutionFiles" style="display: none;">
+                            <label>محضر التوتيد المحرر من طرف مكتب المتابعة :</label>
+                            <input type="file" name="excavationPhotos" accept=".jpg,.png" required>
+                            <label>صور موقع بعد الحفر مع تركيب الكراسي:</label>
+                            <input type="file" name="engineerReport" accept=".pdf" required>
+                            <label>التركيبة الخرسانية: (ضروري في بداية المشروع فقط)</label>
+                            <input type="file" name="concreteStudy" accept=".pdf" required>
+                        </div>
+                        <!-- معاينة الأشغال -->
+                        <div id="concreteTestingFiles" style="display: none;">
+                            <label>صور من موقع الأشغال الحالية:</label>
+                            <input type="file" name="currentWorkPhotos" accept=".jpg,.png" required>
+                            <label>محضر استلام الأشغال (مكتب المتابعة):</label>
+                            <input type="file" name="workAcceptanceReport" accept=".pdf" required>
+                            <label>نتائج الخرسانة:</label>
+                            <input type="file" name="concreteResults" accept=".pdf" required>
+                        </div>
+                        <!-- معاينة أشغال المساكة -->
+                        <div id="concreteWorksFiles" style="display: none;">
+                            <label>صور الموقع:</label>
+                            <input type="file" name="sitePhotos" accept=".jpg,.png" required>
+                            <label>محضر استلام أشغال المساكة (مكتب التابعة):</label>
+                            <input type="file" name="formworkAcceptanceReport" accept=".pdf" required>
+                        </div>
+                        <!-- الاستلام المؤقت -->
+                        <div id="soilFiles" style="display: none;">
+                            <label>صورة من الموقع:</label>
+                            <input type="file" name="sitePhotoTemporary" accept=".jpg,.png" required>
+                            <label>دعوة من صاحب المشروع:</label>
+                            <input type="file" name="ownerInvitationTemporary" accept=".pdf" required>
+                        </div>
+                        <!-- الاستلام النهائي -->
+                        <div id="notSpecifiedFiles" style="display: none;">
+                            <label>نسخة الاستلام المؤقت:</label>
+                            <input type="file" name="temporaryAcceptanceCopy" accept=".pdf" required>
+                            <label>دعوة من صاحب المشروع:</label>
+                            <input type="file" name="ownerInvitationFinal" accept=".pdf" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Basic Information -->
+            <div class="form-section">
+                <h3>معلومات الحجز</h3>
+                <div class="form-group">
+                    <label for="visitDesc">وصف الزيارة:</label>
+                    <textarea id="visitDesc" name="visitDesc" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="dateTime">الوقت والتاريخ المقترح:</label>
+                    <div class="date-time-group">
+                        <input type="date" id="date" name="date" required>
+                        <input type="time" id="time" name="time" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="form-section">
+                <button type="submit">تأكيد الحجز</button>
+            </div>
+        </form>
+    </div>
+    <script src="javascript/index.js"></script>
+</body>
+</html>

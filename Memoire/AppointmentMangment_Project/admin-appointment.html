@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الحجوزات</title>
+    <link rel="stylesheet" href="css/admin-appointment.css">
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="header">
+        <div class="logo-placeholder">
+            <img src="logo.jpg" alt="شعار الشركة">
+        </div>
+        <div class="header-actions">
+            <button class="action-button" onclick="window.location.href='admin-dashboard.html'">لوحة التحكم</button>
+            <button class="action-button" onclick="window.location.href='admin-users.html'">إدارة المستخدمين</button>
+            <button class="action-button" onclick="window.location.href='admin-login.html'">تسجيل خروج الإدارة</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>إدارة الحجوزات</h1>
+
+        <!-- Appointments Management Section -->
+        <div class="form-section">
+            <h3>قائمة الحجوزات</h3>
+            <div class="appointment-status-list" id="adminAppointmentList">
+                <!-- Sample Appointment 1 -->
+                <div class="appointment-card" data-status="confirmed">
+                    <div class="appointment-details">
+                        <p><strong>تاريخ ووقت الموعد:</strong> <span class="date-time">2025-03-17, 10:00 ص</span></p>
+                        <p><strong>اسم المشروع:</strong> مشروع بناء المدرسة</p>
+                        <p><strong>موقع المشروع:</strong> الرياض</p>
+                        <p><strong>سبب الزيارة:</strong> معاينة الحفر</p>
+                        <p><strong>الحالة:</strong> <span class="status confirmed">مؤكد</span></p>
+                    </div>
+                    <div class="appointment-actions">
+                        <button class="action-btn approve" onclick="updateAppointmentStatus(this, 'confirmed')">تأكيد</button>
+                        <button class="action-btn reject" onclick="updateAppointmentStatus(this, 'rejected')">رفض</button>
+                        <button class="action-btn complete" onclick="updateAppointmentStatus(this, 'completed')">إكمال</button>
+                        <button class="action-btn postpone" onclick="postponeAppointment(this)">تأجيل</button>
+                    </div>
+                </div>
+
+                <!-- Sample Appointment 2 -->
+                <div class="appointment-card" data-status="pending">
+                    <div class="appointment-details">
+                        <p><strong>تاريخ ووقت الموعد:</strong> <span class="date-time">2025-03-18, 2:00 م</span></p>
+                        <p><strong>اسم المشروع:</strong> مشروع السكن</p>
+                        <p><strong>موقع المشروع:</strong> جدة</p>
+                        <p><strong>سبب الزيارة:</strong> الاستلام المؤقت</p>
+                        <p><strong>الحالة:</strong> <span class="status pending">قيد الانتظار</span></p>
+                    </div>
+                    <div class="appointment-actions">
+                        <button class="action-btn approve" onclick="updateAppointmentStatus(this, 'confirmed')">تأكيد</button>
+                        <button class="action-btn reject" onclick="updateAppointmentStatus(this, 'rejected')">رفض</button>
+                        <button class="action-btn complete" onclick="updateAppointmentStatus(this, 'completed')">إكمال</button>
+                        <button class="action-btn postpone" onclick="postponeAppointment(this)">تأجيل</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Postponing Appointment -->
+    <div id="postponeModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>تأجيل الموعد</h3>
+            <form id="postponeForm" onsubmit="submitPostpone(event)">
+                <div class="form-group">
+                    <label for="newDate">التاريخ الجديد:</label>
+                    <input type="date" id="newDate" name="newDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="newTime">الوقت الجديد:</label>
+                    <input type="time" id="newTime" name="newTime" required>
+                </div>
+                <button type="submit">تأكيد التأجيل</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="javascript/admin-appointment.js"></script>
+</body>
+</html>

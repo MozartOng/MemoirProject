@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم الإدارة</title>
+    <link rel="stylesheet" href="css/admin-dashboard.css">
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="header">
+        <div class="logo-placeholder">
+            <img src="logo.jpg" alt="شعار الشركة">
+        </div>
+        <div class="header-actions">
+            <button class="action-button" onclick="window.location.href='index.html'">حجز موعد</button>
+            <button class="action-button" onclick="window.location.href='appointment-status.html'">حالة الحجوزات</button>
+            <button class="action-button" onclick="window.location.href='login.html'">تسجيل الدخول/التسجيل</button>
+            <button class="action-button" onclick="window.location.href='admin-login.html'">تسجيل خروج الإدارة</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>لوحة تحكم الإدارة</h1>
+
+        <!-- Navigation Section -->
+        <div class="form-section">
+            <h3>اختر القسم</h3>
+            <div class="admin-navigation">
+                <button class="nav-button" onclick="window.location.href='admin-appointment.html'">إدارة الحجوزات</button>
+                <button class="nav-button" onclick="window.location.href='admin-users.html'">إدارة المستخدمين</button>
+            </div>
+        </div>
+    </div>
+    <script src="javascript/admin-dashbaord.js"></script>
+</body>
+</html>
