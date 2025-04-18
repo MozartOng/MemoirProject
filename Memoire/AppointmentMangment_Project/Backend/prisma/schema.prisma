@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Appointment {
+  id                Int                  @id @default(autoincrement())
+  user_id           Int
+  user              User                 @relation(fields: [user_id], references: [id])
+  appointment_date  DateTime
+  appointment_time  String
+  project_name      String
+  project_location  String
+  visit_reason      String
+  visit_description String?
+  workshop_detail   String?
+  status            AppointmentStatus    @default(pending)
+  created_at        DateTime             @default(now())
+  updated_at        DateTime             @updatedAt
+  files             File[]
+  history           AppointmentHistory[] @relation("AppointmentHistory")
+}
+
+model AppointmentHistory {
+  id              Int               @id @default(autoincrement())
+  appointment_id  Int
+  appointment     Appointment       @relation("AppointmentHistory", fields: [appointment_id], references: [id])
+  admin_id        Int
+  admin           User              @relation("AdminHistory", fields: [admin_id], references: [id])
+  previous_status String
+  new_status      String
+  created_at      DateTime          @default(now())
+}
+
+model User {
+  id              Int                  @id @default(autoincrement())
+  full_name       String
+  email           String               @unique
+  password        String
+  role            UserRole
+  company_name    String
+  created_at      DateTime             @default(now())
+  updated_at      DateTime             @updatedAt
+  appointments    Appointment[]
+  admin_history   AppointmentHistory[] @relation("AdminHistory")
+}
+
+model File {
+  id             Int         @id @default(autoincrement())
+  appointment_id Int
+  appointment    Appointment @relation(fields: [appointment_id], references: [id])
+  file_path      String
+  file_type      String
+  created_at     DateTime    @default(now())
+}
+
+enum AppointmentStatus {
+  pending
+  confirmed
+  completed
+  rejected
+  postponed
+}
+
+enum UserRole {
+  admin
+  contractor
+  engineering
+  owner
+  lab
+}

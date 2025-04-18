@@ -14,7 +14,7 @@
         </div>
         <div class="header-actions">
             <button class="action-button" onclick="window.location.href='appointmentStatus.html'">حالة الحجوزات</button>
-            <button class="action-button" onclick="window.location.href='login.html'">تسجيل الخروج/دخول</button>
+            <button class="action-button" onclick="logout()">تسجيل الخروج</button>
         </div>
     </header>
 
@@ -23,17 +23,6 @@
         
         <!-- Form Wrapper -->
         <form id="appointmentForm" class="appointment-form">
-            <!-- Role Selection -->
-            <div class="form-section">
-                <label for="role">اختر الدور:</label>
-                <select id="role" onchange="updateFields()">
-                    <option value="contractor">مقاول</option>
-                    <option value="engineering">مكتب الدراسات</option>
-                    <option value="owner">صاحب المشروع</option>
-                    <option value="lab">مخبر</option>
-                </select>
-            </div>
-
             <!-- Project Details -->
             <div class="form-section">
                 <h3>تفاصيل المشروع</h3>
@@ -83,7 +72,7 @@
                     <div id="workshopFiles" class="file-upload-section" style="display: none;">
                         <!-- معاينة الحفر -->
                         <div id="reexecutionFiles" style="display: none;">
-                            <label>محضر التوتيد المحرر من طرف مكتب المتابعة :</label>
+                            <label>محضر التوتيد المحرر من طرف مكتب المتابعة:</label>
                             <input type="file" name="excavationPhotos" accept=".jpg,.png" required>
                             <label>صور موقع بعد الحفر مع تركيب الكراسي:</label>
                             <input type="file" name="engineerReport" accept=".pdf" required>
@@ -148,5 +137,6 @@
         </form>
     </div>
     <script src="javascript/index.js"></script>
+    <script src="javascript/logout.js"></script>
 </body>
 </html>

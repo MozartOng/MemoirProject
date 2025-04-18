@@ -1,0 +1,252 @@
+2025-04-12T08:24:31.204Z [info]: Server running on port 3000
+2025-04-12T09:02:57.891Z [info]: POST /api/auth/register
+2025-04-12T09:02:58.149Z [error]: secretOrPrivateKey must have a value
+2025-04-12T09:07:55.801Z [info]: POST /api/auth/register
+2025-04-12T09:07:55.806Z [error]: Email already exists
+2025-04-12T09:09:27.954Z [info]: POST /api/auth/login
+2025-04-12T09:09:28.095Z [error]: secretOrPrivateKey must have a value
+2025-04-12T09:11:17.396Z [info]: POST /api/auth/login
+2025-04-12T09:11:17.509Z [error]: secretOrPrivateKey must have a value
+2025-04-12T09:11:43.542Z [info]: POST /api/auth/register
+2025-04-12T09:11:43.545Z [error]: Email already exists
+2025-04-12T09:11:52.103Z [info]: POST /api/auth/register
+2025-04-12T09:11:52.236Z [error]: secretOrPrivateKey must have a value
+2025-04-12T09:14:46.235Z [info]: POST /api/auth/register
+2025-04-12T09:14:46.264Z [error]: Email already exists
+2025-04-12T09:14:51.136Z [info]: POST /api/auth/login
+2025-04-12T09:14:51.251Z [error]: secretOrPrivateKey must have a value
+2025-04-12T09:16:57.039Z [info]: Server running on port 3000
+2025-04-12T09:17:34.831Z [info]: POST /api/auth/register
+2025-04-12T09:17:34.967Z [error]: Email already exists
+2025-04-12T09:20:28.640Z [info]: POST /api/auth/register
+2025-04-12T09:22:17.129Z [info]: POST /api/auth/admin-login
+2025-04-12T09:22:17.134Z [error]: Invalid admin credentials
+2025-04-12T09:22:29.598Z [info]: POST /api/auth/admin-login
+2025-04-12T09:22:29.602Z [error]: Invalid admin credentials
+2025-04-12T09:29:59.711Z [info]: POST /api/auth/admin-login
+2025-04-12T09:29:59.747Z [error]: Invalid admin credentials
+2025-04-12T09:30:15.764Z [info]: POST /api/auth/admin-login
+2025-04-12T09:30:15.766Z [error]: Invalid admin credentials
+2025-04-12T09:35:10.821Z [info]: Server running on port 3000
+2025-04-12T09:35:15.581Z [info]: POST /api/auth/admin-login
+2025-04-12T09:35:15.714Z [error]: Invalid admin credentials
+2025-04-12T09:35:47.942Z [info]: POST /api/auth/admin-login
+2025-04-12T09:35:47.948Z [error]: Invalid admin credentials
+2025-04-12T09:46:02.944Z [info]: Server running on port 3000
+2025-04-12T09:46:09.248Z [info]: POST /api/auth/admin-login
+2025-04-12T09:47:19.668Z [info]: POST /api/auth/login
+2025-04-12T09:49:36.742Z [info]: POST /api/auth/appointments
+2025-04-12T09:50:22.617Z [info]: POST /api/auth/appointments
+2025-04-12T09:50:53.521Z [info]: POST /api/appointments
+2025-04-12T09:51:18.797Z [info]: POST /api/appointments/my-appointments
+2025-04-12T09:51:33.367Z [info]: GET /api/appointments/my-appointments
+2025-04-12T09:52:48.682Z [info]: PATCH /api/appointments/1
+2025-04-12T09:53:11.219Z [info]: PATCH /api/appointments/my-appointments
+2025-04-12T09:53:11.224Z [error]: Access denied: Admins only
+2025-04-12T09:53:41.518Z [info]: GET /api/appointments/my-appointments
+2025-04-12T10:13:07.889Z [info]: Server running on port 3000
+2025-04-12T10:13:37.968Z [info]: GET /api/users/profile
+2025-04-12T10:50:20.032Z [info]: Server running on port 3000
+2025-04-12T10:50:55.959Z [info]: GET /auth/login
+2025-04-12T10:51:43.180Z [info]: GET /api/auth/login
+2025-04-12T10:51:56.192Z [info]: GET /api/auth/admin-login
+2025-04-12T10:54:29.150Z [info]: OPTIONS /api/auth/register
+2025-04-12T10:54:29.157Z [info]: OPTIONS /api/auth/register
+2025-04-12T11:02:32.417Z [info]: Server running on port 3000
+2025-04-12T11:03:24.152Z [info]: OPTIONS /api/auth/admin-login
+2025-04-12T11:03:24.161Z [info]: OPTIONS /api/auth/admin-login
+2025-04-12T11:04:39.888Z [info]: OPTIONS /api/auth/register
+2025-04-12T11:04:39.892Z [info]: OPTIONS /api/auth/register
+2025-04-13T07:16:49.318Z [info]: Server running on port 3000
+2025-04-13T07:17:11.635Z [info]: OPTIONS /api/auth/register
+2025-04-13T07:20:55.674Z [info]: Server running on port 3000
+2025-04-13T07:21:16.731Z [info]: POST /api/auth/register
+2025-04-13T07:30:28.473Z [info]: POST /api/auth/register
+2025-04-13T07:30:28.513Z [error]: Email already exists
+2025-04-13T07:30:58.888Z [info]: POST /api/auth/login
+2025-04-13T07:31:09.336Z [info]: POST /api/auth/login
+2025-04-13T07:31:09.456Z [error]: Invalid credentials
+2025-04-13T07:31:38.298Z [info]: POST /api/auth/register
+2025-04-13T07:37:30.220Z [info]: Server running on port 3000
+2025-04-13T07:37:46.700Z [info]: POST /api/auth/register
+2025-04-13T07:38:28.837Z [info]: POST /api/auth/register
+2025-04-13T07:45:32.704Z [info]: POST /api/auth/register
+2025-04-13T07:46:20.093Z [info]: POST /api/auth/register
+2025-04-13T07:47:04.320Z [info]: POST /api/auth/login
+2025-04-13T07:47:04.448Z [error]: Invalid credentials
+2025-04-13T07:47:35.431Z [info]: POST /api/auth/login
+2025-04-13T07:47:42.921Z [info]: GET /api/users/profile
+2025-04-13T07:47:48.398Z [info]: GET /api/users/profile
+2025-04-13T07:47:48.673Z [info]: GET /api/users/profile
+2025-04-13T07:47:48.975Z [info]: GET /api/users/profile
+2025-04-13T07:47:49.261Z [info]: GET /api/users/profile
+2025-04-13T07:47:49.543Z [info]: GET /api/users/profile
+2025-04-13T07:47:49.816Z [info]: GET /api/users/profile
+2025-04-13T07:47:50.112Z [info]: GET /api/users/profile
+2025-04-13T07:47:50.394Z [info]: GET /api/users/profile
+2025-04-13T07:47:50.686Z [info]: GET /api/users/profile
+2025-04-13T07:47:50.979Z [info]: GET /api/users/profile
+2025-04-13T07:47:51.293Z [info]: GET /api/users/profile
+2025-04-13T07:47:51.598Z [info]: GET /api/users/profile
+2025-04-13T07:47:51.825Z [info]: GET /api/users/profile
+2025-04-13T07:47:52.129Z [info]: GET /api/users/profile
+2025-04-13T07:47:52.412Z [info]: GET /api/users/profile
+2025-04-13T07:47:52.705Z [info]: GET /api/users/profile
+2025-04-13T07:47:52.965Z [info]: GET /api/users/profile
+2025-04-13T07:47:53.246Z [info]: GET /api/users/profile
+2025-04-13T07:47:53.495Z [info]: GET /api/users/profile
+2025-04-13T07:47:53.737Z [info]: GET /api/users/profile
+2025-04-13T07:47:53.973Z [info]: GET /api/users/profile
+2025-04-13T07:47:54.277Z [info]: GET /api/users/profile
+2025-04-13T07:47:54.562Z [info]: GET /api/users/profile
+2025-04-13T07:47:54.808Z [info]: GET /api/users/profile
+2025-04-13T07:47:55.106Z [info]: GET /api/users/profile
+2025-04-13T07:47:55.377Z [info]: GET /api/users/profile
+2025-04-13T07:47:55.691Z [info]: GET /api/users/profile
+2025-04-13T07:47:55.963Z [info]: GET /api/users/profile
+2025-04-13T07:47:56.227Z [info]: GET /api/users/profile
+2025-04-13T07:47:56.491Z [info]: GET /api/users/profile
+2025-04-13T07:47:56.759Z [info]: GET /api/users/profile
+2025-04-13T07:47:57.028Z [info]: GET /api/users/profile
+2025-04-13T07:47:57.331Z [info]: GET /api/users/profile
+2025-04-13T07:47:57.578Z [info]: GET /api/users/profile
+2025-04-13T07:47:57.836Z [info]: GET /api/users/profile
+2025-04-13T07:47:58.093Z [info]: GET /api/users/profile
+2025-04-13T07:47:58.445Z [info]: GET /api/users/profile
+2025-04-13T07:47:58.778Z [info]: GET /api/users/profile
+2025-04-13T07:47:59.055Z [info]: GET /api/users/profile
+2025-04-13T07:47:59.341Z [info]: GET /api/users/profile
+2025-04-13T07:47:59.602Z [info]: GET /api/users/profile
+2025-04-13T07:47:59.844Z [info]: GET /api/users/profile
+2025-04-13T07:48:00.087Z [info]: GET /api/users/profile
+2025-04-13T07:48:00.281Z [info]: GET /api/users/profile
+2025-04-13T07:48:00.466Z [info]: GET /api/users/profile
+2025-04-13T07:48:00.629Z [info]: GET /api/users/profile
+2025-04-13T07:48:00.786Z [info]: GET /api/users/profile
+2025-04-13T07:48:00.962Z [info]: GET /api/users/profile
+2025-04-13T07:48:01.132Z [info]: GET /api/users/profile
+2025-04-13T07:48:01.324Z [info]: GET /api/users/profile
+2025-04-13T07:48:01.491Z [info]: GET /api/users/profile
+2025-04-13T07:48:01.659Z [info]: GET /api/users/profile
+2025-04-13T07:48:01.828Z [info]: GET /api/users/profile
+2025-04-13T07:48:01.994Z [info]: GET /api/users/profile
+2025-04-13T07:48:02.160Z [info]: GET /api/users/profile
+2025-04-13T07:48:02.334Z [info]: GET /api/users/profile
+2025-04-13T07:48:02.491Z [info]: GET /api/users/profile
+2025-04-13T07:48:02.663Z [info]: GET /api/users/profile
+2025-04-13T07:48:02.833Z [info]: GET /api/users/profile
+2025-04-13T07:48:03.014Z [info]: GET /api/users/profile
+2025-04-13T07:48:03.181Z [info]: GET /api/users/profile
+2025-04-13T07:48:03.346Z [info]: GET /api/users/profile
+2025-04-13T07:48:03.517Z [info]: GET /api/users/profile
+2025-04-13T07:48:03.688Z [info]: GET /api/users/profile
+2025-04-13T07:48:03.869Z [info]: GET /api/users/profile
+2025-04-13T07:48:04.049Z [info]: GET /api/users/profile
+2025-04-13T07:48:04.227Z [info]: GET /api/users/profile
+2025-04-13T07:48:04.412Z [info]: GET /api/users/profile
+2025-04-13T07:48:04.617Z [info]: GET /api/users/profile
+2025-04-13T07:48:04.779Z [info]: GET /api/users/profile
+2025-04-13T07:48:04.964Z [info]: GET /api/users/profile
+2025-04-13T07:48:05.144Z [info]: GET /api/users/profile
+2025-04-13T07:48:05.311Z [info]: GET /api/users/profile
+2025-04-13T07:48:05.492Z [info]: GET /api/users/profile
+2025-04-13T07:48:05.690Z [info]: GET /api/users/profile
+2025-04-13T07:48:05.849Z [info]: GET /api/users/profile
+2025-04-13T07:48:06.025Z [info]: GET /api/users/profile
+2025-04-13T07:48:06.195Z [info]: GET /api/users/profile
+2025-04-13T07:48:06.371Z [info]: GET /api/users/profile
+2025-04-13T07:48:06.544Z [info]: GET /api/users/profile
+2025-04-13T07:48:06.718Z [info]: GET /api/users/profile
+2025-04-13T07:48:06.909Z [info]: GET /api/users/profile
+2025-04-13T07:48:07.084Z [info]: GET /api/users/profile
+2025-04-13T07:48:07.392Z [info]: GET /api/users/profile
+2025-04-13T07:48:07.557Z [info]: GET /api/users/profile
+2025-04-13T07:48:07.710Z [info]: GET /api/users/profile
+2025-04-13T07:48:07.875Z [info]: GET /api/users/profile
+2025-04-13T07:48:08.030Z [info]: GET /api/users/profile
+2025-04-13T07:48:08.178Z [info]: GET /api/users/profile
+2025-04-13T07:48:08.334Z [info]: GET /api/users/profile
+2025-04-13T07:48:08.490Z [info]: GET /api/users/profile
+2025-04-13T07:48:08.637Z [info]: GET /api/users/profile
+2025-04-13T07:48:08.805Z [info]: GET /api/users/profile
+2025-04-13T07:48:08.972Z [info]: GET /api/users/profile
+2025-04-13T07:48:09.121Z [info]: GET /api/users/profile
+2025-04-13T07:48:09.277Z [info]: GET /api/users/profile
+2025-04-13T07:48:09.440Z [info]: GET /api/users/profile
+2025-04-13T07:48:09.602Z [info]: GET /api/users/profile
+2025-04-13T07:48:09.759Z [info]: GET /api/users/profile
+2025-04-13T07:48:09.915Z [info]: GET /api/users/profile
+2025-04-13T07:48:10.065Z [info]: GET /api/users/profile
+2025-04-13T07:48:10.214Z [info]: GET /api/users/profile
+2025-04-13T07:54:08.030Z [info]: Server running on port 3000
+2025-04-13T07:54:53.837Z [info]: POST /api/auth/register
+2025-04-13T07:55:15.393Z [info]: POST /api/auth/login
+2025-04-13T07:55:35.576Z [info]: POST /api/auth/login
+2025-04-13T07:56:05.547Z [info]: POST /api/auth/login
+2025-04-13T08:01:20.498Z [info]: Server running on port 3000
+2025-04-13T08:44:19.689Z [info]: Server running on port 3000
+2025-04-13T08:47:39.465Z [info]: POST /api/auth/register
+2025-04-13T08:48:40.196Z [info]: POST /api/auth/login
+2025-04-13T08:51:49.643Z [info]: Server running on port 3000
+2025-04-13T09:00:31.355Z [info]: Server running on port 3000
+2025-04-13T09:00:49.268Z [info]: POST /api/auth/register
+2025-04-13T09:00:49.287Z [info]: POST /api/auth/register
+2025-04-13T09:00:49.660Z [error]: 
+Invalid `prisma.user.create()` invocation in
+/home/mozart/Desktop/Memoire/AppointmentMangment_Project/Backend/controller/authController.js:25:36
+
+  22 }
+  23 
+  24 const hashedPassword = await bcrypt.hash(password, 10);
+→ 25 const user = await prisma.user.create(
+Unique constraint failed on the fields: (`email`)
+2025-04-13T09:01:04.282Z [info]: POST /api/auth/login
+2025-04-13T09:01:04.285Z [info]: POST /api/auth/login
+2025-04-13T09:01:27.660Z [info]: POST /api/auth/register
+2025-04-13T09:01:27.663Z [info]: POST /api/auth/register
+2025-04-13T09:01:27.980Z [error]: 
+Invalid `prisma.user.create()` invocation in
+/home/mozart/Desktop/Memoire/AppointmentMangment_Project/Backend/controller/authController.js:25:36
+
+  22 }
+  23 
+  24 const hashedPassword = await bcrypt.hash(password, 10);
+→ 25 const user = await prisma.user.create(
+Unique constraint failed on the fields: (`email`)
+2025-04-13T09:03:21.533Z [info]: GET /api/auth/register
+2025-04-13T09:06:20.296Z [info]: Server running on port 3000
+2025-04-13T09:06:40.646Z [info]: POST /api/auth/register
+2025-04-13T09:06:40.802Z [error]: Email already exists
+2025-04-13T09:07:04.774Z [info]: POST /api/auth/login
+2025-04-13T09:07:04.782Z [info]: POST /api/auth/login
+2025-04-13T09:07:04.784Z [error]: Invalid credentials
+2025-04-13T09:07:04.788Z [error]: Invalid credentials
+2025-04-13T09:07:19.528Z [info]: POST /api/auth/login
+2025-04-13T09:07:19.534Z [info]: POST /api/auth/login
+2025-04-13T09:07:42.079Z [info]: Server running on port 3000
+2025-04-13T09:07:54.253Z [info]: POST /api/auth/login
+2025-04-13T09:08:19.402Z [info]: POST /api/auth/register
+2025-04-13T09:08:19.408Z [error]: Email already exists
+2025-04-13T09:08:51.953Z [info]: POST /api/auth/register
+2025-04-13T09:09:13.747Z [info]: POST /api/auth/login
+2025-04-13T09:09:47.325Z [info]: Server running on port 3000
+2025-04-13T09:10:07.932Z [info]: POST /api/auth/login
+2025-04-13T09:11:59.246Z [info]: POST /api/auth/register
+2025-04-13T09:28:26.353Z [info]: Server running on port 3000
+2025-04-13T09:32:24.819Z [info]: Server running on port 3000
+2025-04-13T09:32:44.526Z [info]: POST /api/auth/register
+2025-04-13T09:32:44.682Z [error]: Email already exists
+2025-04-13T09:36:09.635Z [info]: Server running on port 3000
+2025-04-13T09:36:39.812Z [info]: POST /api/auth/register
+2025-04-13T09:40:30.629Z [info]: Server running on port 3000
+2025-04-13T09:40:54.135Z [info]: POST /api/auth/register
+2025-04-13T09:41:13.350Z [info]: POST /api/auth/login
+2025-04-13T09:45:02.773Z [info]: Server running on port 3000
+2025-04-13T09:45:27.626Z [info]: POST /api/auth/register
+2025-04-13T09:45:27.626Z [info]: POST /api/auth/register
+2025-04-13T09:49:14.497Z [info]: Server running on port 3000
+2025-04-13T09:49:31.410Z [info]: POST /api/auth/register
+2025-04-13T09:49:31.410Z [info]: POST /api/auth/register
+2025-04-13T09:58:17.511Z [info]: POST /api/auth/register
+2025-04-13T09:58:17.512Z [info]: POST /api/auth/register
+2025-04-13T10:04:01.565Z [info]: Server running on port 3000
