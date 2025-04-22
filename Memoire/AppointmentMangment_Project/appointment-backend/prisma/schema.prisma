@@ -1,0 +1,84 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  fullName      String   @map("full_name")
+  email         String   @unique
+  password      String
+  role          Role
+  companyName   String   @map("company_name")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  appointments  Appointment[]
+
+  @@map("users") // Optional: Map to 'users' table name if desired
+}
+
+model Appointment {
+  id                Int      @id @default(autoincrement())
+  userId            Int      @map("user_id")
+  projectName       String   @map("project_name")
+  projectLocation   String   @map("project_location")
+  visitReason       VisitReason @map("visit_reason")
+  workshopDetail    WorkshopDetail? @map("workshop_detail") // Nullable if not workshop
+  visitDesc         String   @map("visit_desc") @db.Text
+  proposedDateTime  DateTime @map("proposed_date_time")
+  status            AppointmentStatus @default(PENDING)
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  files             AppointmentFile[]
+
+  @@map("appointments")
+}
+
+model AppointmentFile {
+  id            Int      @id @default(autoincrement())
+  appointmentId Int      @map("appointment_id")
+  filePath      String   @map("file_path")       // Path relative to the uploads dir
+  originalName  String   @map("original_name")   // Original name of the uploaded file
+  fileType      String   @map("file_type")       // e.g., 'general', 'excavationPhotos', 'engineerReport'
+  uploadedAt    DateTime @default(now()) @map("uploaded_at")
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@map("appointment_files")
+}
+
+enum Role {
+  CONTRACTOR
+  ENGINEERING
+  OWNER
+  LAB
+  ADMIN
+}
+
+enum VisitReason {
+  OTHER
+  FILE
+  WORKSHOP
+}
+
+// Match values from your frontend select options
+enum WorkshopDetail {
+  REEXECUTION     // معاينة الحفر
+  CONCRETE_TESTING // معاينة الأشغال
+  CONCRETE_WORKS  // معاينة أشغال المساكة
+  SOIL            // الاستلام المؤقت
+  NOT_SPECIFIED   // الاستلام النهائي
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+  COMPLETED
+  POSTPONED
+}
