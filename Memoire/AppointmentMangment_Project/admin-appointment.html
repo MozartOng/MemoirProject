@@ -27,7 +27,7 @@
             <h3>قائمة الحجوزات</h3>
             <div class="appointment-status-list" id="adminAppointmentList">
                 <!-- Sample Appointment 1 -->
-                <div class="appointment-card" data-status="confirmed">
+                <!-- <div class="appointment-card" data-status="confirmed">
                     <div class="appointment-details">
                         <p><strong>تاريخ ووقت الموعد:</strong> <span class="date-time">2025-03-17, 10:00 ص</span></p>
                         <p><strong>اسم المشروع:</strong> مشروع بناء المدرسة</p>
@@ -43,7 +43,7 @@
                     </div>
                 </div>
 
-                <!-- Sample Appointment 2 -->
+                <!-- Sample Appointment 2 
                 <div class="appointment-card" data-status="pending">
                     <div class="appointment-details">
                         <p><strong>تاريخ ووقت الموعد:</strong> <span class="date-time">2025-03-18, 2:00 م</span></p>
@@ -57,8 +57,8 @@
                         <button class="action-btn reject" onclick="updateAppointmentStatus(this, 'rejected')">رفض</button>
                         <button class="action-btn complete" onclick="updateAppointmentStatus(this, 'completed')">إكمال</button>
                         <button class="action-btn postpone" onclick="postponeAppointment(this)">تأجيل</button>
-                    </div>
-                </div>
+                    </div> 
+                </div>-->
             </div>
         </div>
     </div>
@@ -81,7 +81,8 @@
             </form>
         </div>
     </div>
-
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="javascript/api.js"></script>
     <script src="javascript/admin-appointment.js"></script>
 </body>
 </html>
