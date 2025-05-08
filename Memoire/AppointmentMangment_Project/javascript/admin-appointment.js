@@ -46,6 +46,7 @@ const statusTranslations = { PENDING: 'قيد الانتظار', CONFIRMED: 'م�
 
 // --- Global Variables ---
 const adminAppointmentListDiv = document.getElementById('adminAppointmentList');
+const adminStatusFilterSelect = document.getElementById('adminStatusFilter'); // Get reference to filter
 const postponeModal = document.getElementById('postponeModal');
 const postponeForm = document.getElementById('postponeForm');
 const newDateInput = document.getElementById('newDate'); // Input for new date in modal
@@ -142,16 +143,21 @@ function renderFiles(files) {
 
 // --- Function to fetch all appointments for admin ---
 async function fetchAndRenderAdminAppointments() {
-    console.log("Fetching all appointments for admin...");
+    // Read the selected status from the filter dropdown
+    const selectedStatus = adminStatusFilterSelect ? adminStatusFilterSelect.value : 'all';
+    console.log(`Workspaceing all appointments for admin with status: ${selectedStatus}`);
     setLoading('adminAppointmentList', true); // Show loading state in the list div
+
     try {
         // Check if api object is available
         if (typeof api === 'undefined') throw new Error("API config missing.");
-        // Make GET request to the admin endpoint
-        // Auth token is automatically added by the interceptor in api.js
-        const response = await api.get('/appointments/admin');
+        // Make GET request to the admin endpoint, including the status filter
+        const response = await api.get('/appointments/admin', {
+             params: { status: selectedStatus } // Add filter parameter
+        });
         console.log("Admin appointments received:", response.data);
         renderAdminAppointments(response.data); // Render the received data
+
     } catch (error) {
         const message = error.response?.data?.message || error.message || 'Failed to load appointments.';
         displayError('adminAppointmentList', message); // Display error in the list div
@@ -164,13 +170,12 @@ async function fetchAndRenderAdminAppointments() {
 async function handleUpdateStatus(appointmentId, newStatus) {
     console.log(`Updating appointment ${appointmentId} to status ${newStatus}`);
     // Optional: Disable the specific button clicked
-    const clickedButton = event?.target;
+    const clickedButton = event?.target; // NOTE: 'event' might not be available if called directly
     if (clickedButton) clickedButton.disabled = true;
 
     try {
         if (typeof api === 'undefined') throw new Error("API config missing.");
         // Make PATCH request to update status
-        // Token added automatically
         await api.patch(`/appointments/admin/${appointmentId}/status`, { status: newStatus });
 
         // Use translated status in success message
@@ -182,10 +187,9 @@ async function handleUpdateStatus(appointmentId, newStatus) {
          const message = error.response?.data?.message || error.message || `Failed to update status.`;
          alert(`خطأ: ${message}`); // Show error alert
          console.error("Update status error:", error);
-         // Re-enable button on error
+         // Re-enable button on error ONLY if we captured it reliably
          if (clickedButton) clickedButton.disabled = false;
     }
-    // No finally needed for button disabling if list is refreshed
 }
 
 
@@ -225,10 +229,12 @@ async function submitPostpone(event) {
     const newDateValue = newDateInput.value; // Get value from input (expects dd/mm/yyyy)
     const newTimeValue = newTimeInput.value; // Get value from time input (hh:mm)
 
+    console.log('Validating Date Value:', JSON.stringify(newDateValue));
+
     // Basic frontend validation for the expected format (dd/mm/yyyy)
-    // Adapt regex if flatpickr outputs slightly differently but backend expects strictly dd/mm/yyyy
-    if (!/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(newDateValue)) {
-         alert('يرجى إدخال التاريخ بالتنسيق الصحيح jj/mm/aaaa!');
+    // Regex allows d/m/yyyy or dd/mm/yyyy
+    if (!/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(newDateValue.trim())) {
+         alert('يرجى إدخال التاريخ بالتنسيق الصحيح dd/mm/yyyy!');
          return;
      }
     if (!/^\d{2}:\d{2}$/.test(newTimeValue)) {
@@ -243,8 +249,8 @@ async function submitPostpone(event) {
         // Make PATCH request to postpone endpoint
         // Send date in dd/mm/yyyy format as expected by backend
         await api.patch(`/appointments/admin/${currentAppointmentId}/postpone`, {
-             newDate: newDateValue, // e.g., "28/04/2025"
-             newTime: newTimeValue  // e.g., "14:00"
+             newDate: newDateValue.trim(), // Send trimmed value
+             newTime: newTimeValue
         });
 
         alert('تم تأجيل الموعد بنجاح.');
@@ -287,47 +293,58 @@ document.addEventListener('DOMContentLoaded', () => {
 
     console.log("Admin authenticated. Initializing page.");
 
-    // Attach postpone form submit listener
+    // --- Initialize Flatpickr for Modal Date Input ---
+    if (newDateInput && typeof flatpickr !== 'undefined' && newDateInput.type === 'text') {
+        console.log("Initializing flatpickr for modal date input #newDate");
+         flatpickr(newDateInput, {
+             dateFormat: "d/m/Y", // Set VALUE format to dd/mm/yyyy
+             altInput: true,      // Show alternate format to user
+             altFormat: "d/m/Y",  // VISUAL format dd/mm/yyyy (can change this visual one if desired)
+             allowInput: true,    // Allow typing
+             locale: "ar"        // Use Arabic locale (needs ar.js included)
+             // minDate: "today", // Optional: Set min date if needed
+         });
+     } else if (newDateInput && newDateInput.type === 'text') {
+        console.warn("Flatpickr library not loaded, but modal date input is text. Manual dd/mm/yyyy input required.");
+     } else if (!newDateInput) {
+         console.error("Modal date input #newDate not found.");
+     }
+     // --- End Flatpickr Init ---
+
+    // --- Attach Event Listeners ---
+    // Postpone form submission
     if (postponeForm) {
         postponeForm.addEventListener('submit', submitPostpone);
     } else {
         console.warn("#postponeForm not found in the HTML.");
     }
-
-    // Add listener for modal close button (assuming class="close")
+    // Status filter dropdown change
+    if (adminStatusFilterSelect) {
+        console.log("Adding change listener to admin status filter.");
+        adminStatusFilterSelect.addEventListener('change', fetchAndRenderAdminAppointments);
+    } else {
+        console.warn("#adminStatusFilter dropdown not found.");
+    }
+    // Modal close button
     const closeButton = postponeModal?.querySelector('.close');
     if (closeButton) {
         closeButton.addEventListener('click', closeModal);
     }
-
-    // Close modal if clicking outside the modal content
+    // Modal close on outside click
     window.addEventListener('click', (event) => {
         if (event.target === postponeModal) {
             closeModal();
         }
     });
+    // --- End Attach Listeners ---
 
-    // Make sure functions called by inline onclick handlers are globally accessible
+
+    // --- Make Functions Global for onclick handlers ---
     window.handleUpdateStatus = handleUpdateStatus;
     window.openPostponeModal = openPostponeModal;
     window.closeModal = closeModal; // Needed for the close button's onclick
 
-    // Initial fetch of all appointments
+    // --- Initial Data Fetch ---
     fetchAndRenderAdminAppointments();
 
-    // Optional: Initialize flatpickr for the modal date input if using type="text"
-    // Ensure flatpickr JS/CSS are included in admin-appointment.html if needed
-    if (newDateInput && typeof flatpickr !== 'undefined' && newDateInput.type === 'text') {
-        console.log("Initializing flatpickr for modal date input #newDate");
-         flatpickr(newDateInput, {
-             dateFormat: "d/m/Y", // Format expected by the backend (dd/mm/yyyy)
-             allowInput: true,    // Allow typing
-             locale: "ar"        // Use Arabic locale (needs ar.js included)
-             // altInput: true,     // Optional: show a different visual format
-             // altFormat: "j F Y",
-         });
-     } else if (newDateInput && newDateInput.type === 'text') {
-        console.warn("Flatpickr library not loaded, but modal date input is text. Manual dd/mm/yyyy input required.");
-     }
-
-});
+}); // End DOMContentLoaded

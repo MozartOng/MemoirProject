@@ -1,12 +1,14 @@
+/* frontend/css/admin-appointment.css */
 body {
-    font-family: Arial, sans-serif;
+    font-family: Arial, sans-serif; /* Consider a more modern font stack */
     background-color: #f4f4f4;
     margin: 0;
     padding: 0;
+    direction: rtl; /* Right-to-left direction */
 }
 
 .header {
-    background-color: #28a745;
+    background-color: #28a745; /* Green background */
     padding: 15px 30px;
     display: flex;
     justify-content: space-between;
@@ -16,35 +18,36 @@ body {
 }
 
 .logo-placeholder img {
-    max-width: 150px;
+    max-width: 75px;
     height: auto;
     vertical-align: middle;
 }
 
 .header-actions {
     display: flex;
-    gap: 15px;
+    gap: 15px; /* Space between buttons */
 }
 
 .action-button {
     padding: 8px 20px;
-    background-color: #ffffff;
-    color: #28a745;
+    background-color: #ffffff; /* White background */
+    color: #28a745; /* Green text */
     border: none;
     border-radius: 5px;
     cursor: pointer;
     font-size: 14px;
+    font-weight: bold; /* Make text bolder */
     transition: background-color 0.3s, color 0.3s;
 }
 
 .action-button:hover {
-    background-color: #e0e0e0;
-    color: #1e7e34;
+    background-color: #e9ecef; /* Light grey on hover */
+    color: #1e7e34; /* Darker green text on hover */
 }
 
 .container {
     max-width: 900px;
-    margin: 20px auto;
+    margin: 30px auto; /* Increased top/bottom margin */
     background: white;
     padding: 30px;
     border-radius: 10px;
@@ -59,75 +62,118 @@ h1 {
 
 h3 {
     color: #555;
+    margin-top: 0; /* Remove default top margin */
     margin-bottom: 15px;
     border-bottom: 1px solid #ddd;
-    padding-bottom: 5px;
+    padding-bottom: 10px; /* Increased padding */
 }
 
 .form-section {
-    background-color: #f9f9f9;
+    /* background-color: #f9f9f9; */ /* Optional: subtle background for sections */
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); */ /* Optional subtle shadow */
+    margin-bottom: 25px; /* Space between sections */
+    border: 1px solid #eee; /* Add a light border */
+
 }
 
-/* Appointment Management Styles */
+/* Filter Section Styles */
+.filter-section {
+   background-color: #f8f9fa; /* Slightly different background */
+   padding: 15px 20px;
+   border-radius: 5px;
+   margin-bottom: 25px;
+   border: 1px solid #dee2e6;
+}
+
+.filter-section h3 {
+    margin-bottom: 10px;
+    border-bottom: none; /* Remove border from filter title */
+    padding-bottom: 0;
+}
+
+.filter-section .form-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 0;
+}
+.filter-section label {
+    margin-bottom: 0; /* Remove bottom margin */
+    font-weight: normal; /* Make label less bold */
+}
+.filter-section select {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    flex-grow: 1; /* Allow select to take available space */
+    max-width: 250px; /* Optional: Limit max width */
+}
+
+
+/* Appointment List Styles */
 .appointment-status-list {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 15px; /* Space between cards */
 }
 
 .appointment-card {
     background-color: #fff;
-    padding: 15px;
-    border: 1px solid #eee;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    padding: 20px; /* Increased padding */
+    border: 1px solid #e0e0e0; /* Slightly darker border */
+    border-radius: 8px; /* More rounded corners */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); /* Subtle shadow */
     display: flex;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start; /* Align items to the top */
+    gap: 15px; /* Gap between details and actions */
+}
+
+.appointment-details {
+    flex-basis: 65%; /* Take up more space initially */
+    min-width: 300px; /* Ensure minimum width */
 }
 
 .appointment-details p {
-    margin: 5px 0;
+    margin: 8px 0; /* Adjust vertical spacing */
     color: #333;
+    line-height: 1.5; /* Improve readability */
+}
+.appointment-details p strong {
+    color: #111; /* Darker label text */
+    margin-left: 5px; /* Space after label (for RTL) */
 }
 
+/* Status Badge Styles */
 .status {
-    padding: 5px 10px;
-    border-radius: 3px;
+    padding: 4px 10px; /* Adjusted padding */
+    border-radius: 12px; /* Pill shape */
     font-weight: bold;
+    font-size: 12px; /* Smaller font size */
+    display: inline-block; /* Ensure padding works */
+    vertical-align: middle; /* Align nicely with text */
+    text-transform: uppercase; /* Optional: Uppercase text */
 }
 
-.status.confirmed {
-    background-color: #d4edda;
-    color: #155724;
-}
+.status.confirmed { background-color: #d1e7dd; color: #0f5132; }
+.status.pending { background-color: #fff3cd; color: #664d03; }
+.status.completed { background-color: #cce5ff; color: #055160; }
+.status.rejected { background-color: #f8d7da; color: #58151c; }
+.status.postponed { background-color: #fff3e0; color: #e65100; }
+.status.unknown { background-color: #e9ecef; color: #495057; } /* Style for unknown status */
 
-.status.pending {
-    background-color: #fff3cd;
-    color: #856404;
-}
 
-.status.completed {
-    background-color: #cce5ff;
-    color: #004085;
-}
-
-.status.rejected {
-    background-color: #f8d7da;
-    color: #721c24;
-}
-
-.status.postponed {
-    background-color: #fff3e0;
-    color: #e65100;
-}
-
+/* Action Buttons Area */
 .appointment-actions {
     display: flex;
+    flex-wrap: wrap; /* Allow buttons to wrap */
     gap: 10px;
+    flex-basis: 30%; /* Adjust basis */
+    justify-content: flex-end; /* Align buttons to the end (left in RTL) */
+    align-self: center; /* Center vertically relative to details */
 }
 
 .action-btn {
@@ -135,115 +181,68 @@ h3 {
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.3s;
-}
-
-.action-btn.approve {
-    background-color: #28a745;
-    color: white;
-}
-
-.action-btn.approve:hover {
-    background-color: #218838;
-}
-
-.action-btn.reject {
-    background-color: #dc3545;
-    color: white;
-}
-
-.action-btn.reject:hover {
-    background-color: #c82333;
-}
-
-.action-btn.complete {
-    background-color: #007bff;
-    color: white;
-}
-
-.action-btn.complete:hover {
-    background-color: #0056b3;
-}
-
-.action-btn.postpone {
-    background-color: #ff9800;
-    color: white;
-}
-
-.action-btn.postpone:hover {
-    background-color: #e68900;
-}
-
-/* Modal Styles */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-}
-
-.modal-content {
-    background-color: #fff;
-    margin: 15% auto;
-    padding: 20px;
-    border-radius: 8px;
-    width: 80%;
-    max-width: 400px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.close {
-    color: #aaa;
-    float: left;
-    font-size: 28px;
+    font-size: 13px; /* Slightly smaller */
     font-weight: bold;
-    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    text-align: center;
 }
 
-.close:hover,
-.close:focus {
-    color: #000;
+.action-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.action-btn:not(:disabled):active {
+    transform: scale(0.98); /* Click effect */
+}
+
+/* Specific Button Colors */
+.action-btn.approve { background-color: #28a745; color: white; }
+.action-btn.approve:hover:not(:disabled) { background-color: #218838; }
+
+.action-btn.reject { background-color: #dc3545; color: white; }
+.action-btn.reject:hover:not(:disabled) { background-color: #c82333; }
+
+.action-btn.complete { background-color: #007bff; color: white; }
+.action-btn.complete:hover:not(:disabled) { background-color: #0056b3; }
+
+.action-btn.postpone { background-color: #ff9800; color: white; }
+.action-btn.postpone:hover:not(:disabled) { background-color: #e68900; }
+
+/* File List Styling */
+.appointment-files {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed #eee;
+}
+.appointment-files p strong {
+    font-size: 0.9em;
+    color: #555;
+}
+.appointment-files ul {
+    list-style: none;
+    padding-right: 0; /* Remove default padding for RTL */
+    margin: 5px 0 0 0;
+}
+.appointment-files li {
+    margin-bottom: 5px;
+}
+.appointment-files li a {
+    color: #007bff;
     text-decoration: none;
+    font-size: 0.9em;
+}
+.appointment-files li a:hover {
+    text-decoration: underline;
 }
 
-.form-group {
-    margin-bottom: 15px;
-}
 
-label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: bold;
-    color: #444;
-}
-
-input {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    box-sizing: border-box;
-    font-size: 16px;
-}
-
-button[type="submit"] {
-    width: 100%;
-    padding: 12px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s;
-}
-
-button[type="submit"]:hover {
-    background-color: #218838;
-}
+/* Modal Styles (already defined in inline <style>, keep or move here) */
+/* .modal { ... } */
+/* .modal-content { ... } */
+/* .close { ... } */
+/* .form-group { ... } */ /* Ensure modal form groups are styled */
+/* label { ... } */ /* Ensure modal labels are styled */
+/* input { ... } */ /* Ensure modal inputs are styled */
+/* button[type="submit"] { ... } */ /* Ensure modal submit is styled */

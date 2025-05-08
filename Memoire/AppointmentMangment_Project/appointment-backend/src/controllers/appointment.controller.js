@@ -1,7 +1,8 @@
 // src/controllers/appointment.controller.js
-const { PrismaClient, VisitReason, WorkshopDetail, AppointmentStatus } = require('@prisma/client');
+const { PrismaClient, VisitReason, WorkshopDetail, AppointmentStatus , Role} = require('@prisma/client');
 const prisma = new PrismaClient();
 const path = require('path');
+const multer = require('multer');
 // Ensure date-fns is installed: npm install date-fns
 const { parse } = require('date-fns'); // Import the parse function
 
@@ -84,6 +85,7 @@ exports.createAppointment = async (req, res, next) => {
         time
     } = req.body;
     const userId = req.user.id; // Assumes authenticateToken middleware adds req.user
+    const userRole = req.user.role; 
 
     // Basic validation
     if (!projectName || !projectLocation || !visitReasonStr || !visitDesc || !date || !time) {
@@ -96,13 +98,27 @@ exports.createAppointment = async (req, res, next) => {
     }
 
     let workshopDetail = null;
+    let workshopDetailMapped = false;
+
     if (visitReason === VisitReason.WORKSHOP) {
-        if (!workshopDetailStr || workshopDetailStr === 'none') {
-            return res.status(400).json({ message: 'Workshop detail is required for workshop visits.' });
-        }
-        workshopDetail = mapWorkshopDetailToEnum(workshopDetailStr);
-        if (!workshopDetail) {
-            return res.status(400).json({ message: 'Invalid workshop detail provided.' });
+        // Check if the user is a CONTRACTOR - only they are expected to provide details
+        if (userRole === Role.CONTRACTOR) { // Compare with Role enum from Prisma
+            // If contractor selected workshop, detail is mandatory
+            if (!workshopDetailStr || workshopDetailStr === 'none') {
+                // Error only if contractor didn't provide detail
+                return res.status(400).json({ message: 'Workshop detail is required for contractor workshop visits.' });
+            }
+            // If detail is provided, try to map it
+            workshopDetail = mapWorkshopDetailToEnum(workshopDetailStr); // Ensure mapWorkshopDetailToEnum exists
+            if (!workshopDetail) {
+                // Invalid detail value provided by contractor
+                return res.status(400).json({ message: 'Invalid workshop detail provided.' });
+            }
+            workshopDetailMapped = true; // Mark that we processed it
+        } else {
+            // If user is NOT a contractor but chose workshop, we IGNORE workshopDetailStr
+            // It should be null/none from frontend, and we ensure workshopDetail remains null here.
+            console.log(`Non-contractor role (${userRole}) selected workshop reason. Ignoring workshopDetail.`);
         }
     }
 

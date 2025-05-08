@@ -1,4 +1,4 @@
-// javascript/index.js
+// frontend/javascript/index.js
 
 // --- Helper function to display errors ---
 function displayError(formId, message) {
@@ -25,11 +25,9 @@ function setLoading(formId, isLoading) {
 // --- Helper function to get user data from localStorage ---
 function getUserData() {
     const userDataString = localStorage.getItem('userData');
-    // console.log('Raw userData from localStorage:', userDataString); // Uncomment for deep debugging if needed
     try {
         // Parse the JSON string, return null if it's empty or invalid
         const data = userDataString ? JSON.parse(userDataString) : null;
-        // console.log('Parsed userData:', data); // Uncomment for deep debugging if needed
         return data;
     } catch (e) {
         // Log error if JSON parsing fails
@@ -63,13 +61,9 @@ function updateFields() {
     const notSpecifiedFiles = document.getElementById('notSpecifiedFiles');
 
     // --- Reset visibility of all conditional sections ---
-    // Hide general file upload
     if (fileUpload) fileUpload.style.display = 'none';
-    // Hide contractor-specific workshop reason dropdown
     if (workshopReason) workshopReason.style.display = 'none';
-    // Hide the container for contractor-specific file uploads
     if (workshopFiles) workshopFiles.style.display = 'none';
-    // Hide individual contractor file upload sections
     if (reexecutionFiles) reexecutionFiles.style.display = 'none';
     if (concreteTestingFiles) concreteTestingFiles.style.display = 'none';
     if (concreteWorksFiles) concreteWorksFiles.style.display = 'none';
@@ -81,15 +75,11 @@ function updateFields() {
     // Scenario 1: User is a Contractor AND Visit Reason is Workshop
     if (userRole === 'CONTRACTOR' && visitReason === 'workshop') {
         console.log("Condition: Contractor and Workshop visit");
-        // Show the dropdown for specific workshop reasons
-        if (workshopReason) workshopReason.style.display = 'block';
-
-        // If a specific workshop reason (other than 'none') is selected...
+        if (workshopReason) workshopReason.style.display = 'block'; // Show specific reason dropdown
         if (workshopDetail && workshopDetail !== 'none' && workshopFiles) {
             console.log("Workshop detail selected:", workshopDetail);
-            // Show the container for workshop-specific files
-            workshopFiles.style.display = 'block';
-            // Show the relevant file input group based on the selected workshop detail
+            workshopFiles.style.display = 'block'; // Show file container
+            // Show the relevant specific file input group
             if (workshopDetail === 'reexecution' && reexecutionFiles) reexecutionFiles.style.display = 'block';
             else if (workshopDetail === 'concreteTesting' && concreteTestingFiles) concreteTestingFiles.style.display = 'block';
             else if (workshopDetail === 'concreteWorks' && concreteWorksFiles) concreteWorksFiles.style.display = 'block';
@@ -98,12 +88,9 @@ function updateFields() {
         }
     }
     // Scenario 2: Visit Reason requires general file upload
-    // This applies if the reason is 'other' or 'file' (any role),
-    // OR if the reason is 'workshop' but the user is NOT a Contractor.
     else if (visitReason === 'other' || visitReason === 'file' || (visitReason === 'workshop' && userRole !== 'CONTRACTOR')) {
          console.log("Condition: General file upload needed");
-        // Show the general file upload input
-        if (fileUpload) fileUpload.style.display = 'block';
+        if (fileUpload) fileUpload.style.display = 'block'; // Show general file input
     } else {
         console.log("Condition: No specific file section needs to be shown yet.");
     }
@@ -114,80 +101,115 @@ function updateFields() {
 
 // --- Function to handle the appointment form submission ---
 async function handleAppointmentSubmit(event) {
-    console.log("handleAppointmentSubmit triggered"); // Log that the handler started
+    console.log("handleAppointmentSubmit triggered");
+    event.preventDefault(); // Prevent default page reload
 
-    // Prevent the default browser form submission behavior
-    event.preventDefault();
+    const form = event.target;
+    const formId = form.id; // 'appointmentForm'
+    setLoading(formId, true); // Show loading indicator
 
-    const form = event.target; // Get the form element that triggered the event
-    const formId = form.id; // Get the ID of the form ('appointmentForm')
-    setLoading(formId, true); // Indicate processing has started
-
-    // Create FormData object directly from the form element
-    // This automatically includes all form fields and selected files
+    // Create FormData object from the form - includes files and input values
     const formData = new FormData(form);
 
-    // Log FormData entries for debugging purposes
+    // Log FormData content for debugging
     console.log("--- FormData Content ---");
-    let fileCount = 0; // Counter for files specifically under the 'files' key
-    // Iterate through FormData entries
+    let fileCount = 0;
     for (let [key, value] of formData.entries()) {
         if (value instanceof File) {
-            // Log details if the value is a File object
             console.log(`${key}: File - ${value.name} (Size: ${value.size}, Type: ${value.type})`);
-            // Increment counter if the file's key is 'files' (for the multi-upload input)
-            if (key === 'files') {
-                fileCount++;
-            }
+            if (key === 'files') { fileCount++; }
         } else {
-            // Log key-value pair for non-file fields
-            console.log(`${key}: ${value}`);
+            console.log(`${key}: ${value}`); // Log regular field values
         }
     }
-    console.log(`Total files found under 'files' key in FormData: ${fileCount}`); // Log the count for multi-upload
+    console.log(`Total files found under 'files' key in FormData: ${fileCount}`);
     console.log("------------------------");
 
 
-    // --- Basic Frontend Validation ---
-    // Check if essential fields have values before proceeding
-    if (!formData.get('projectName') || !formData.get('projectLocation') || !formData.get('visitReason') || formData.get('visitReason') === 'none' || !formData.get('visitDesc') || !formData.get('date') || !formData.get('time')) {
-        displayError(formId, 'يرجى ملء جميع حقول تفاصيل المشروع والحجز الأساسية وسبب الزيارة.');
-        setLoading(formId, false); // Stop loading indicator
-        console.log("Frontend validation failed."); // Log validation failure
-        return; // Stop the function execution
-    }
-    // Add more specific validation here if needed based on role/visit reason
+    // --- Basic Frontend Validation (Check essential fields first) ---
+    const projectName = formData.get('projectName');
+    const projectLocation = formData.get('projectLocation');
+    const visitReasonValue = formData.get('visitReason'); // Get visit reason value
+    const visitDesc = formData.get('visitDesc');
+    const dateValue = formData.get('date'); // Get date value (should be dd/mm/yyyy from flatpickr)
+    const timeValue = formData.get('time'); // Get time value
 
-    console.log("Frontend validation passed. Attempting API call..."); // Log before making the call
+    if (!projectName || !projectLocation || !visitReasonValue || visitReasonValue === 'none' || !visitDesc || !dateValue || !timeValue) {
+        displayError(formId, 'يرجى ملء جميع حقول تفاصيل المشروع والحجز الأساسية وسبب الزيارة.');
+        setLoading(formId, false);
+        console.log("Basic frontend validation failed.");
+        return; // Stop if basic fields are missing
+    }
+    // --- End Basic Validation ---
+
+
+    // --- Specific Validation for Contractor/Workshop (Perform this second) ---
+    const userData = getUserData(); // Get logged-in user info
+    const userRole = userData ? userData.role : null; // Extract role (e.g., 'CONTRACTOR')
+    const workshopDetailValue = formData.get('workshopDetail'); // Get specific workshop detail value
+
+    // --- DEBUGGING LOGS for Workshop Validation ---
+    console.log("--- Workshop Validation Check ---");
+    console.log("User Role from localStorage:", userRole, `(Is it 'CONTRACTOR'? ${userRole === 'CONTRACTOR'})`);
+    console.log("Visit Reason from Form:", visitReasonValue, `(Is it 'workshop'? ${visitReasonValue === 'workshop'})`);
+    console.log("Workshop Detail from Form:", workshopDetailValue);
+    console.log("Combined Condition Check:", userRole === 'CONTRACTOR' && visitReasonValue === 'workshop');
+    console.log("-------------------------------");
+    // --- END DEBUGGING LOGS ---
+
+    // Check only if the user is a contractor AND chose workshop visit reason
+    if (userRole === 'CONTRACTOR' && visitReasonValue === 'workshop') {
+        console.log("Contractor/Workshop condition MET. Checking detail..."); // Log if outer condition is true
+        // Check if workshop detail is missing or set to the default "none" value
+        if (!workshopDetailValue || workshopDetailValue === 'none') {
+            displayError(formId, 'يرجى اختيار سبب زيارة الورشة المحدد من القائمة الثانية.'); // Show specific error
+            setLoading(formId, false); // Turn off loading indicator
+            console.log("Frontend validation failed: Missing workshop detail for contractor.");
+            return; // Stop form submission
+        } else {
+             console.log("Workshop detail seems OK:", workshopDetailValue); // Log if detail is present
+        }
+    }
+    // --- End Specific Validation ---
+
+
+    // If all frontend validations passed:
+    console.log("Frontend validation passed. Attempting API call...");
 
     try {
-        // Check if the 'api' object (from api.js) is available
+        // Ensure api object from api.js is available
         if (typeof api === 'undefined') {
              console.error("API object is not defined! Check if api.js is included correctly BEFORE index.js.");
-             // Throw an error to be caught by the catch block
              throw new Error("API configuration is missing.");
         }
 
-        // Make the POST request to the backend endpoint using the configured Axios instance ('api')
-        // Pass the FormData object directly; Axios will set the correct Content-Type header
+        // --- Make the API call ---
+        // Send the FormData; Axios handles the multipart/form-data header
+        // Backend receives 'date' as 'dd/mm/yyyy' string because of flatpickr dateFormat
         const response = await api.post('/appointments', formData);
 
-        console.log('Appointment Creation Success:', response.data); // Log successful response data
-        alert('تم تسجيل الحجز بنجاح!'); // Notify user of success
-        form.reset(); // Clear the form fields
-        updateFields(); // Update field visibility based on the reset form state
+        console.log('Appointment Creation Success:', response.data);
+        alert('تم تسجيل الحجز بنجاح!');
+        form.reset(); // Reset form fields
+
+        // Manually clear the flatpickr instance after form reset
+        const fpInstance = document.querySelector("#date")?._flatpickr;
+        if (fpInstance) {
+            fpInstance.clear(); // Clears the selected date in flatpickr
+        }
+
+        updateFields(); // Update visibility of conditional fields
 
     } catch (error) {
-        // Catch any errors during the API call or processing
-        console.error("Full submit error object:", error); // Log the entire error object for details
-        // Extract a user-friendly error message
-        const message = error.response?.data?.message // Prefer backend message
-                     || error.message                 // Fallback to generic error message
-                     || 'فشل تسجيل الحجز.';        // Default message
-        displayError(formId, message); // Show the error message to the user
+        // Handle errors from the API call
+        console.error("Full submit error object:", error);
+        const message = error.response?.data?.message // Try to get message from backend response
+                     || error.message                 // Otherwise use generic JS error message
+                     || 'فشل تسجيل الحجز.';        // Default fallback message
+        displayError(formId, message); // Show error to the user
     } finally {
-        // This block runs regardless of success or failure
-        console.log("Submit handler finished."); // Log completion
+        // This block executes whether the try block succeeded or failed
+        console.log("Submit handler finished.");
         setLoading(formId, false); // Ensure loading indicator is turned off
     }
 }
@@ -195,59 +217,60 @@ async function handleAppointmentSubmit(event) {
 
 // --- Event listener for when the HTML document is fully loaded ---
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOM Loaded for index.js"); // Log that the DOM is ready
+    console.log("DOM Loaded for index.js"); // Log DOM ready state
 
     // --- Authentication Check ---
     const token = localStorage.getItem('authToken');
-    const userData = getUserData(); // Get parsed user data
+    const userData = getUserData(); // Get parsed user data from storage
 
-    // If no token or no user data, redirect to login
+    // Redirect to login if token or user data is missing
     if (!token || !userData) {
         console.log("Auth token or user data missing. Redirecting to login.");
         alert('Please log in to book an appointment.');
-        // Clear any potentially inconsistent stored data
-        localStorage.removeItem('authToken');
+        localStorage.removeItem('authToken'); // Clear potentially invalid items
         localStorage.removeItem('userData');
-        window.location.href = 'login.html'; // Redirect
-        return; // Stop further script execution for this page
+        window.location.href = 'login.html'; // Perform redirection
+        return; // Stop executing further script on this page
     }
-    console.log("User authenticated. Proceeding with page setup."); // Log successful auth check
+    console.log("User authenticated. Proceeding with page setup."); // Log successful auth
 
-    //flatpicker
+
+    // --- Initialize Flatpickr ---
     const dateInput = document.getElementById('date');
-    if (dateInput) {
-        console.log("Initializing flatpickr for date input");
+    if (dateInput && typeof flatpickr !== 'undefined' && dateInput.type === 'text') {
+        console.log("Initializing flatpickr for date input #date");
         flatpickr(dateInput, {
-            // Configuration options for flatpickr:
-            altInput: true,      // Creates a second input field that is visible to the user
-            altFormat: "d/m/Y",  // How the date *LOOKS* to the user (e.g., 22/04/2025)
-            dateFormat: "d/m/Y", // The ACTUAL VALUE format sent with the form - KEEP THIS AS Y-m-d to match your backend!
-            locale: "ar",        // Use Arabic locale for month names, weekdays (requires the locale file)
-            allowInput: true,    // Allow user to type date directly (optional)
-            // minDate: "today", // Optional: prevent selecting past dates
+            // Configuration options:
+            altInput: true,      // Show a user-friendly version
+            altFormat: "d/m/Y",  // Visual format shown to user (dd/mm/yyyy)
+            dateFormat: "d/m/Y", // ACTUAL VALUE format stored in the input (dd/mm/yyyy) - Sent to backend
+            locale: "ar",        // Use Arabic locale (requires including ar.js locale file)
+            allowInput: true,    // Allow manual typing (optional, validates on blur)
+            minDate: "today",    // Prevent selecting past dates
         });
+    } else if (dateInput && dateInput.type !== 'text') {
+         console.error("Date input #date should be type='text' for flatpickr.");
+    } else if (dateInput) {
+         console.warn("Flatpickr library not loaded. Date input might not work as expected.");
     } else {
         console.error("Date input element with ID 'date' not found for flatpickr.");
     }
+    // --- End Flatpickr Init ---
 
 
     // --- Attach Form Submit Listener ---
     const appointmentForm = document.getElementById('appointmentForm');
     if (appointmentForm) {
         console.log("Appointment form found. Adding submit listener.");
-        // Add the event listener to call handleAppointmentSubmit when the form is submitted
         appointmentForm.addEventListener('submit', handleAppointmentSubmit);
     } else {
-        // Log an error if the form element isn't found in the HTML
         console.error("Could not find appointment form with ID 'appointmentForm'");
     }
 
-    // --- Attach Change Listeners for Dynamic Fields ---
-    // Get references to dropdowns that affect field visibility
+    // --- Attach Change Listeners for Dynamic Field Visibility ---
     const visitReasonSelect = document.getElementById('visitReason');
     const workshopDetailSelect = document.getElementById('workshopDetail');
 
-    // Add event listeners to call updateFields whenever their value changes
     if (visitReasonSelect) {
         console.log("Adding change listener to visitReasonSelect");
         visitReasonSelect.addEventListener('change', updateFields);
@@ -258,8 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Initial Page Setup ---
-    // Call updateFields once on page load to set the initial state
-    // based on default dropdown values and the logged-in user's role
+    // Call updateFields once on load to set the correct initial visibility
     console.log("Calling initial updateFields on page load.");
     updateFields();
 });

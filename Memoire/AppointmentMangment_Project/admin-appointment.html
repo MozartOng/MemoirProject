@@ -4,7 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إدارة الحجوزات</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="css/admin-appointment.css">
+    <style>
+        .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 400px; text-align: right; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .modal-content h3 { text-align: center; }
+        .close { color: #aaa; float: left; font-size: 28px; font-weight: bold; }
+        .close:hover, .close:focus { color: black; text-decoration: none; cursor: pointer; }
+        .form-group { margin-bottom: 15px; text-align: right;}
+        .form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #444; }
+        /* Ensure modal inputs inherit general input styles or have specific ones */
+        .modal-content input[type="text"], .modal-content input[type="time"] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+        .modal-content button[type="submit"] { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; transition: background-color 0.3s; }
+        .modal-content button[type="submit"]:hover { background-color: #218838; }
+    </style>
 </head>
 <body>
     <!-- Header Section -->
@@ -15,50 +29,34 @@
         <div class="header-actions">
             <button class="action-button" onclick="window.location.href='admin-dashboard.html'">لوحة التحكم</button>
             <button class="action-button" onclick="window.location.href='admin-users.html'">إدارة المستخدمين</button>
-            <button class="action-button" onclick="window.location.href='admin-login.html'">تسجيل خروج الإدارة</button>
+            <button class="action-button" onclick="window.location.href='admin-login.html'">تسجيل خروج </button>
         </div>
     </header>
 
     <div class="container">
         <h1>إدارة الحجوزات</h1>
 
+
+        <div class="form-section filter-section">
+            <h3>تصفية الحجوزات</h3>
+            <div class="form-group">
+                <label for="adminStatusFilter">اختر الحالة:</label>
+                <select id="adminStatusFilter"> {/* Changed ID */}
+                    <option value="all">الكل</option>
+                    <option value="pending">قيد الانتظار</option>
+                    <option value="confirmed">مؤكد</option>
+                    <option value="rejected">مرفوض</option>
+                    <option value="completed">مكتمل</option>
+                    <option value="postponed">مؤجل</option>
+                </select>
+            </div>
+        </div>
+
         <!-- Appointments Management Section -->
         <div class="form-section">
             <h3>قائمة الحجوزات</h3>
             <div class="appointment-status-list" id="adminAppointmentList">
-                <!-- Sample Appointment 1 -->
-                <!-- <div class="appointment-card" data-status="confirmed">
-                    <div class="appointment-details">
-                        <p><strong>تاريخ ووقت الموعد:</strong> <span class="date-time">2025-03-17, 10:00 ص</span></p>
-                        <p><strong>اسم المشروع:</strong> مشروع بناء المدرسة</p>
-                        <p><strong>موقع المشروع:</strong> الرياض</p>
-                        <p><strong>سبب الزيارة:</strong> معاينة الحفر</p>
-                        <p><strong>الحالة:</strong> <span class="status confirmed">مؤكد</span></p>
-                    </div>
-                    <div class="appointment-actions">
-                        <button class="action-btn approve" onclick="updateAppointmentStatus(this, 'confirmed')">تأكيد</button>
-                        <button class="action-btn reject" onclick="updateAppointmentStatus(this, 'rejected')">رفض</button>
-                        <button class="action-btn complete" onclick="updateAppointmentStatus(this, 'completed')">إكمال</button>
-                        <button class="action-btn postpone" onclick="postponeAppointment(this)">تأجيل</button>
-                    </div>
-                </div>
-
-                <!-- Sample Appointment 2 
-                <div class="appointment-card" data-status="pending">
-                    <div class="appointment-details">
-                        <p><strong>تاريخ ووقت الموعد:</strong> <span class="date-time">2025-03-18, 2:00 م</span></p>
-                        <p><strong>اسم المشروع:</strong> مشروع السكن</p>
-                        <p><strong>موقع المشروع:</strong> جدة</p>
-                        <p><strong>سبب الزيارة:</strong> الاستلام المؤقت</p>
-                        <p><strong>الحالة:</strong> <span class="status pending">قيد الانتظار</span></p>
-                    </div>
-                    <div class="appointment-actions">
-                        <button class="action-btn approve" onclick="updateAppointmentStatus(this, 'confirmed')">تأكيد</button>
-                        <button class="action-btn reject" onclick="updateAppointmentStatus(this, 'rejected')">رفض</button>
-                        <button class="action-btn complete" onclick="updateAppointmentStatus(this, 'completed')">إكمال</button>
-                        <button class="action-btn postpone" onclick="postponeAppointment(this)">تأجيل</button>
-                    </div> 
-                </div>-->
+              
             </div>
         </div>
     </div>
@@ -71,7 +69,7 @@
             <form id="postponeForm" onsubmit="submitPostpone(event)">
                 <div class="form-group">
                     <label for="newDate">التاريخ الجديد:</label>
-                    <input type="date" id="newDate" name="newDate" required>
+                    <input type="text" id="newDate" name="newDate" required>
                 </div>
                 <div class="form-group">
                     <label for="newTime">الوقت الجديد:</label>
@@ -82,6 +80,8 @@
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/ar.js"></script>
     <script src="javascript/api.js"></script>
     <script src="javascript/admin-appointment.js"></script>
 </body>

@@ -30,7 +30,14 @@ exports.register = async (req, res, next) => {
   if (!prismaRole) {
       return res.status(400).json({ message: 'Invalid role specified.' });
   }
+  
+  const existingUser = await prisma.user.findUnique({
+    where: { email: email },
+  });
 
+  if (existingUser) {
+    return res.status(409).json({ message: 'Email address already in use.' });
+  }
 
   try {
     const hashedPassword = await hashPassword(password);
