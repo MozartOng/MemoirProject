@@ -90,3 +90,227 @@ h3 {
     margin: 5px 0;
     color: #333;
 }
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1000; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
+}
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 25px;
+    border: 1px solid #888;
+    width: 90%;
+    max-width: 450px; /* Maximum width */
+    border-radius: 8px;
+    text-align: center; /* Center content */
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+.modal-content h4 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #333;
+}
+.modal-content p {
+    margin-bottom: 25px;
+    color: #555;
+}
+.modal-actions {
+    display: flex;
+    justify-content: center; /* Center buttons */
+    gap: 15px;
+}
+.modal-actions button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.confirm-delete-btn {
+    background-color: #dc3545; /* Red */
+    color: white;
+}
+.cancel-delete-btn {
+    background-color: #6c757d; /* Grey */
+    color: white;
+}
+.close-modal-btn { /* Style for a potential 'X' button */
+    position: absolute;
+    top: 10px;
+    left: 15px; /* For RTL */
+    font-size: 24px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+}
+.close-modal-btn:hover {
+    color: #333;
+}
+
+.user-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end; /* Align buttons to the end (left in RTL) */
+}
+.user-actions button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+}
+.user-actions .update-btn {
+    background-color: #ffc107; /* Yellow */
+    color: #333;
+}
+.user-actions .delete-btn {
+    background-color: #dc3545; /* Red */
+    color: white;
+}
+
+/* Add this to your css/admin-users.css file or within <style> tags */
+
+/* General Modal Styling (some might be duplicates of your existing modal styles, adjust as needed) */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.6);
+    direction: rtl; /* Ensure modal content is also RTL */
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 10% auto; /* Adjust top margin for better centering */
+    padding: 30px; /* Increase padding */
+    border: 1px solid #ddd; /* Softer border */
+    width: 90%;
+    max-width: 500px; /* Slightly wider modal */
+    border-radius: 10px; /* More rounded corners */
+    text-align: right; /* Default text align for RTL */
+    position: relative;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.25);
+}
+
+.modal-content h4 {
+    margin-top: 0;
+    margin-bottom: 25px; /* More space below title */
+    color: #333;
+    text-align: center;
+    font-size: 1.5em; /* Larger title */
+    font-weight: 600;
+}
+
+.close-modal-btn {
+    position: absolute;
+    top: 15px; /* Adjust position */
+    left: 20px; /* Adjust for RTL */
+    font-size: 28px;
+    font-weight: bold;
+    color: #888;
+    background: none;
+    border: none;
+    padding: 0;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.close-modal-btn:hover {
+    color: #333;
+}
+
+/* Form Group Styling within the Modal */
+#updateUserForm .form-group {
+    margin-bottom: 20px; /* Increase spacing between form groups */
+    text-align: right; /* Ensure labels and inputs align to the right */
+}
+
+#updateUserForm .form-group label {
+    display: block;
+    margin-bottom: 8px; /* Space between label and input */
+    font-weight: 600; /* Bolder labels */
+    color: #495057; /* Label color */
+    font-size: 0.95em;
+}
+
+#updateUserForm .form-group input[type="text"],
+#updateUserForm .form-group input[type="email"],
+#updateUserForm .form-group select {
+    width: 100%;
+    padding: 12px 15px; /* Increase padding */
+    border: 1px solid #ced4da; /* Standard border color */
+    border-radius: 6px; /* Slightly more rounded inputs */
+    box-sizing: border-box; /* Important for width calculation */
+    font-size: 1em; /* Standard font size */
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#updateUserForm .form-group input[type="text"]:focus,
+#updateUserForm .form-group input[type="email"]:focus,
+#updateUserForm .form-group select:focus {
+    border-color: #80bdff; /* Highlight on focus */
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25); /* Bootstrap-like focus shadow */
+}
+
+#updateUserForm .form-group input[readonly] {
+    background-color: #e9ecef; /* Indicate readonly fields */
+    cursor: not-allowed;
+}
+
+/* Modal Actions (Buttons) Styling */
+#updateUserForm .modal-actions {
+    display: flex;
+    justify-content: flex-start; /* Align buttons to the start (right in RTL) */
+    gap: 12px; /* Space between buttons */
+    margin-top: 30px; /* More space above buttons */
+    padding-top: 20px; /* Space above buttons */
+    border-top: 1px solid #eee; /* Separator line */
+}
+
+#updateUserForm .modal-actions button {
+    padding: 12px 25px; /* Larger buttons */
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95em;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+#updateUserForm .modal-actions button[type="submit"] {
+    background-color: #007bff; /* Blue for primary action */
+    color: white;
+}
+
+#updateUserForm .modal-actions button[type="submit"]:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+#updateUserForm .modal-actions button[type="button"].cancel-delete-btn { /* Assuming you reuse cancel-delete-btn class or create a new one */
+    background-color: #6c757d; /* Grey for cancel */
+    color: white;
+}
+
+#updateUserForm .modal-actions button[type="button"].cancel-delete-btn:hover {
+    background-color: #5a6268; /* Darker grey on hover */
+}
+
+#updateUserForm .modal-actions button:active {
+    transform: translateY(1px); /* Simple press effect */
+}

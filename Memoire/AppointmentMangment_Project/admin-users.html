@@ -7,51 +7,83 @@
     <link rel="stylesheet" href="css/admin-users.css">
 </head>
 <body>
-    <!-- Header Section -->
     <header class="header">
         <div class="logo-placeholder">
-            <img src="logo.jpg" alt="شعار الشركة">
-        </div>
+            <img src="logo.jpg" alt="شعار الشركة"> </div>
         <div class="header-actions">
             <button class="action-button" onclick="window.location.href='admin-dashboard.html'">لوحة التحكم</button>
-            <button class="action-button" onclick="window.location.href='admin-appointments.html'">إدارة الحجوزات</button>
-            <button class="action-button" onclick="window.location.href='admin-login.html'">تسجيل خروج الإدارة</button>
+            <button class="action-button" onclick="window.location.href='admin-appointment.html'">إدارة الحجوزات</button>
+            <button class="action-button" onclick="logout()">تسجيل خروج الإدارة</button>
         </div>
     </header>
 
     <div class="container">
         <h1>إدارة المستخدمين</h1>
 
-        <!-- Users Management Section -->
         <div class="form-section">
             <h3>قائمة المستخدمين</h3>
             <div class="user-list" id="userList">
-                <!-- Sample User 1 -->
-                <div class="user-card">
-                    <div class="user-details">
-                        <p><strong>الاسم الكامل:</strong> أحمد محمد</p>
-                        <p><strong>البريد الإلكتروني:</strong> ahmed@example.com</p>
-                        <p><strong>الدور:</strong> مقاول</p>
-                        <p><strong>اسم الشركة:</strong> شركة البناء المثالي</p>
-                    </div>
                 </div>
+        </div>
+    </div>
 
-                <!-- Sample User 2 -->
-                <div class="user-card">
-                    <div class="user-details">
-                        <p><strong>الاسم الكامل:</strong> سارة علي</p>
-                        <p><strong>البريد الإلكتروني:</strong> sarah@example.com</p>
-                        <p><strong>الدور:</strong> مكتب الدراسات</p>
-                        <p><strong>اسم الشركة:</strong> مكتب التصميم الهندسي</p>
-                    </div>
-                </div>
+    <div id="deleteUserModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal-btn" onclick="closeDeleteModal()">&times;</span>
+            <h4>تأكيد الحذف</h4>
+            <p id="deleteUserModalText">هل أنت متأكد أنك تريد حذف هذا المستخدم؟ لا يمكن التراجع عن هذا الإجراء.</p>
+            <div class="modal-actions">
+                <button id="confirmDeleteUserBtn" class="confirm-delete-btn">نعم، قم بالحذف</button>
+                <button class="cancel-delete-btn" onclick="closeDeleteModal()">إلغاء</button>
             </div>
         </div>
     </div>
+
+    <div id="updateUserModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal-btn" onclick="closeUpdateModal()">&times;</span>
+            <h4>تحديث بيانات المستخدم</h4>
+            <form id="updateUserForm">
+                <input type="hidden" id="updateUserId">
+                <div class="form-group">
+                    <label for="updateFullName">الاسم الكامل:</label>
+                    <input type="text" id="updateFullName" name="fullName" required>
+                </div>
+                <div class="form-group">
+                    <label for="updateEmail">البريد الإلكتروني:</label>
+                    <input type="email" id="updateEmail" name="email" required readonly> </div>
+                <div class="form-group">
+                    <label for="updateRole">الدور:</label>
+                    <select id="updateRole" name="role" required>
+                        <option value="CONTRACTOR">مقاول</option>
+                        <option value="ENGINEERING">مكتب الدراسات</option>
+                        <option value="OWNER">صاحب المشروع</option>
+                        <option value="LAB">مخبر</option>
+                        </select>
+                </div>
+                <div class="form-group">
+                    <label for="updateCompanyName">اسم الشركة:</label>
+                    <input type="text" id="updateCompanyName" name="companyName" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="confirm-delete-btn" style="background-color: #007bff;">حفظ التغييرات</button>
+                    <button type="button" class="cancel-delete-btn" onclick="closeUpdateModal()">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://npmcdn.com/flatpickr/dist/l10n/ar.js"></script>
     <script src="javascript/api.js"></script>
-    <script src="javascript/"></script>
+    <script src="javascript/admin-user.js"></script> 
+    <script>
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userData');
+            alert('تم تسجيل الخروج بنجاح.');
+            window.location.href = 'admin-login.html'; // Adjust path if needed
+        }
+    </script>
 </body>
 </html>
