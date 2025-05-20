@@ -20,6 +20,6 @@ router.patch('/:id', authenticateToken, isAdmin, userController.updateUserById);
 // DELETE /api/users/:id - Admin: Delete a user by ID
 router.delete('/:id', authenticateToken, isAdmin, userController.deleteUserById);
 
-
+router.get('/me/projects', authenticateToken, userController.getAssignedProjectsForCurrentUser);
 
 module.exports = router;

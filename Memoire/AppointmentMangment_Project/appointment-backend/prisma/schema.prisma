@@ -17,24 +17,52 @@ model User {
   companyName   String   @map("company_name")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
-  appointments  Appointment[]
 
-  @@map("users") // Optional: Map to 'users' table name if desired
+  appointments  Appointment[]
+  projects      Project[]       @relation("UserProjects") // Relation for projects user is assigned to
+
+  @@map("users")
 }
+
+// --- NEW MODEL: Project ---
+model Project {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique // Project name should be unique
+  location    String
+  status      ProjectStatus @default(PLANNED) // Default status
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  users       User[]          @relation("UserProjects") // Users assigned to this project
+  appointments Appointment[]   // Appointments related to this project
+
+  @@map("projects")
+}
+// --- END NEW MODEL ---
 
 model Appointment {
   id                Int      @id @default(autoincrement())
   userId            Int      @map("user_id")
-  projectName       String   @map("project_name")
-  projectLocation   String   @map("project_location")
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // --- MODIFIED: Link to Project model ---
+  projectId         Int      @map("project_id")
+  project           Project  @relation(fields: [projectId], references: [id], onDelete: Cascade) // Or Restrict if project deletion shouldn't cascade to appointments
+  // --- END MODIFIED ---
+
+  // --- REMOVED ---
+  // projectName       String   @map("project_name")
+  // projectLocation   String   @map("project_location")
+  // --- END REMOVED ---
+
   visitReason       VisitReason @map("visit_reason")
-  workshopDetail    WorkshopDetail? @map("workshop_detail") // Nullable if not workshop
+  workshopDetail    WorkshopDetail? @map("workshop_detail")
   visitDesc         String   @map("visit_desc") @db.Text
   proposedDateTime  DateTime @map("proposed_date_time")
   status            AppointmentStatus @default(PENDING)
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   files             AppointmentFile[]
 
   @@map("appointments")
@@ -43,15 +71,16 @@ model Appointment {
 model AppointmentFile {
   id            Int      @id @default(autoincrement())
   appointmentId Int      @map("appointment_id")
-  filePath      String   @map("file_path")       // Path relative to the uploads dir
-  originalName  String   @map("original_name")   // Original name of the uploaded file
-  fileType      String   @map("file_type")       // e.g., 'general', 'excavationPhotos', 'engineerReport'
+  filePath      String   @map("file_path")
+  originalName  String   @map("original_name")
+  fileType      String   @map("file_type")
   uploadedAt    DateTime @default(now()) @map("uploaded_at")
   appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
 
   @@map("appointment_files")
 }
 
+// --- Enums (Keep existing) ---
 enum Role {
   CONTRACTOR
   ENGINEERING
@@ -66,13 +95,12 @@ enum VisitReason {
   WORKSHOP
 }
 
-// Match values from your frontend select options
 enum WorkshopDetail {
-  REEXECUTION     // معاينة الحفر
-  CONCRETE_TESTING // معاينة الأشغال
-  CONCRETE_WORKS  // معاينة أشغال المساكة
-  SOIL            // الاستلام المؤقت
-  NOT_SPECIFIED   // الاستلام النهائي
+  REEXECUTION         // معاينة الحفر
+  CONCRETE_TESTING    // معاينة الأشغال
+  CONCRETE_WORKS      // معاينة أشغال المساكة
+  SOIL                // الاستلام المؤقت
+  NOT_SPECIFIED       // الاستلام النهائي
 }
 
 enum AppointmentStatus {
@@ -82,3 +110,13 @@ enum AppointmentStatus {
   COMPLETED
   POSTPONED
 }
+
+// --- NEW ENUM: ProjectStatus ---
+enum ProjectStatus {
+  PLANNED
+  ONGOING
+  COMPLETED
+  ON_HOLD
+  CANCELLED
+}
+// --- END NEW ENUM ---

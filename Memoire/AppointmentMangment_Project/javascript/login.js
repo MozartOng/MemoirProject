@@ -1,80 +1,26 @@
-// javascript/login.js
+// frontend/javascript/login.js
 
-// Function to handle displaying errors (replace basic alert)
+// --- Helper Functions (Keep if used, or define them if not in api.js) ---
 function displayError(formId, message) {
-    // Simple alert for now, enhance this to show messages near the form
     console.error(`Error in form ${formId}: ${message}`);
-    alert(`Error: ${message}`);
+    alert(`خطأ: ${message}`); // Replace with better UI feedback if desired
 }
 
-// Function to handle showing loading state (optional)
 function setLoading(formId, isLoading) {
     const button = document.querySelector(`#${formId} button[type="submit"]`);
     if (button) {
         button.disabled = isLoading;
-        button.textContent = isLoading ? 'Processing...' : 'Submit'; // Adjust button text
+        button.textContent = isLoading ? 'جاري المعالجة...' : 'تسجيل الدخول';
     }
 }
+// --- End Helper Functions ---
 
-function openTab(tabName) {
-    const tabs = document.querySelectorAll('.tab-content');
-    const buttons = document.querySelectorAll('.tab-button');
+// REMOVED: openTab function, as registration tab is gone.
+// If you completely removed the .tabs div from HTML, this is not needed.
+// function openTab(tabName) { ... }
 
-    tabs.forEach(tab => {
-        tab.style.display = 'none';
-    });
-
-    buttons.forEach(button => {
-        button.classList.remove('active');
-    });
-
-    
-    // ... (keep existing code) ...
-     document.getElementById(tabName).style.display = 'block';
-     // Find the button associated with the tabName and add 'active' class
-     document.querySelector(`.tab-button[onclick="openTab('${tabName}')"]`).classList.add('active');
-}
-
-async function handleRegister(event) {
-    event.preventDefault();
-    const form = event.target;
-    const formId = form.id; // 'registerForm'
-    setLoading(formId, true);
-
-    const fullName = document.getElementById('fullName').value;
-    const email = document.getElementById('registerEmail').value;
-    const role = document.getElementById('role').value;
-    const companyName = document.getElementById('companyName').value;
-    const password = document.getElementById('registerPassword').value;
-
-    // Basic frontend validation
-    if (!fullName || !email || !role || !companyName || !password || password.length < 8) {
-        displayError(formId, 'يرجى ملء جميع الحقول المطلوبة! يجب أن تكون كلمة المرور 8 أحرف على الأقل.');
-        setLoading(formId, false);
-        return;
-    }
-
-    try {
-        const response = await api.post('/auth/register', {
-            fullName,
-            email,
-            role, // Send the selected value directly
-            companyName,
-            password,
-        });
-
-        console.log('Registration Success:', response.data);
-        alert('تم إنشاء الحساب بنجاح! يرجى تسجيل الدخول.');
-        openTab('login'); // Switch to login tab
-        form.reset(); // Clear the registration form
-
-    } catch (error) {
-        const message = error.response?.data?.message || error.message || 'فشل إنشاء الحساب.';
-        displayError(formId, message);
-    } finally {
-        setLoading(formId, false);
-    }
-}
+// REMOVED: handleRegister function
+// async function handleRegister(event) { ... }
 
 async function handleLogin(event) {
     event.preventDefault();
@@ -82,21 +28,24 @@ async function handleLogin(event) {
     const formId = form.id; // 'loginForm'
     setLoading(formId, true);
 
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
+    const credentials = {
+        email: document.getElementById('loginEmail').value,
+        password: document.getElementById('loginPassword').value,
+    };
 
-    if (!email || !password) {
+    if (!credentials.email || !credentials.password) {
         displayError(formId, 'يرجى إدخال البريد الإلكتروني وكلمة المرور!');
         setLoading(formId, false);
         return;
     }
 
     try {
-        const response = await api.post('/auth/login', { email, password });
-
+        if (typeof api === 'undefined') {
+            throw new Error("API configuration is missing. Ensure api.js is loaded.");
+        }
+        const response = await api.post('/auth/login', credentials);
         console.log('Login Success:', response.data);
 
-        // Store token and user data
         if (response.data.token && response.data.user) {
             localStorage.setItem('authToken', response.data.token);
             localStorage.setItem('userData', JSON.stringify(response.data.user));
@@ -105,35 +54,32 @@ async function handleLogin(event) {
         }
 
         alert('تم تسجيل الدخول بنجاح!');
-
-        // Redirect based on role
-        const userRole = response.data.user.role;
+        const userRole = response.data.user.role; // Role from backend (e.g., ADMIN, CONTRACTOR)
         if (userRole === 'ADMIN') {
-             window.location.href = 'admin-dashboard.html';
+             window.location.href = 'admin-dashboard.html'; // Adjust path if needed
         } else {
-             window.location.href = 'index.html'; // Redirect regular users to booking page
+             window.location.href = 'index.html'; // Adjust path for non-admin users
         }
 
     } catch (error) {
         const message = error.response?.data?.message || error.message || 'فشل تسجيل الدخول. تحقق من بيانات الاعتماد.';
         displayError(formId, message);
+        console.error("Login error:", error);
     } finally {
         setLoading(formId, false);
     }
 }
 
-// Attach submit handlers to forms after DOM is loaded
+// Attach submit handler to the login form
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
-
     if (loginForm) {
         loginForm.addEventListener('submit', handleLogin);
-    }
-    if (registerForm) {
-        registerForm.addEventListener('submit', handleRegister);
+    } else {
+        console.error("Login form (#loginForm) not found!");
     }
 
-    // Initialize the default tab (Login)
-    openTab('login');
+    // If you completely removed the .tabs div and the openTab function:
+    // Ensure the login form section is visible by default (e.g., style="display: block;")
+    // No need to call openTab('login');
 });

@@ -102,12 +102,13 @@ function renderAdminAppointments(appointments) {
         const canConfirmReject = isPending; // Can only confirm/reject if pending
 
         // Card Inner HTML including Action Buttons
+        // **FIXED project name and location access here**
         card.innerHTML = `
             <div class="appointment-details">
                  <p><strong>المستخدم:</strong> ${app.user?.fullName || 'N/A'} (${app.user?.companyName || 'N/A'})</p>
                 <p><strong>تاريخ ووقت الموعد:</strong> <span class="date-time">${formattedDateTime}</span></p>
-                <p><strong>اسم المشروع:</strong> ${app.projectName || 'N/A'}</p>
-                <p><strong>موقع المشروع:</strong> ${app.projectLocation || 'N/A'}</p>
+                <p><strong>اسم المشروع:</strong> ${app.project && app.project.name ? app.project.name : 'N/A'}</p>
+                <p><strong>موقع المشروع:</strong> ${app.project && app.project.location ? app.project.location : 'N/A'}</p>
                 <p><strong>سبب الزيارة:</strong> ${visitReasonText}</p>
                 <p><strong>الوصف:</strong> ${app.visitDesc || '-'}</p>
                 <p><strong>الحالة:</strong> <span class="status ${statusClass}">${statusText}</span></p>
@@ -132,9 +133,9 @@ function renderFiles(files) {
         let fileUrl = '#'; // Default link
         try {
             // Construct URL relative to server root
-            const baseUrl = new URL(api.defaults.baseURL);
-            fileUrl = `${baseUrl.origin}/uploads/${file.filePath}`;
-        } catch (e) { console.error("Could not construct file base URL:", api.defaults.baseURL, e); }
+            const baseUrl = new URL(api.defaults.baseURL); // api.defaults.baseURL should be like 'http://localhost:3000'
+            fileUrl = `${baseUrl.origin}/uploads/${file.filePath}`; // Assumes uploads are served at /uploads/
+        } catch (e) { console.error("Could not construct file base URL from:", api.defaults.baseURL, e); }
         filesHtml += `<li><a href="${fileUrl}" target="_blank" rel="noopener noreferrer">${file.originalName || 'ملف'} (${file.fileType || 'N/A'})</a></li>`;
     });
     filesHtml += '</ul></div>';
@@ -145,14 +146,14 @@ function renderFiles(files) {
 async function fetchAndRenderAdminAppointments() {
     // Read the selected status from the filter dropdown
     const selectedStatus = adminStatusFilterSelect ? adminStatusFilterSelect.value : 'all';
-    console.log(`Workspaceing all appointments for admin with status: ${selectedStatus}`);
+    console.log(`Fetching all appointments for admin with status: ${selectedStatus}`); // Corrected log
     setLoading('adminAppointmentList', true); // Show loading state in the list div
 
     try {
         // Check if api object is available
         if (typeof api === 'undefined') throw new Error("API config missing.");
         // Make GET request to the admin endpoint, including the status filter
-        const response = await api.get('/appointments/admin', {
+        const response = await api.get('/appointments/admin', { // Endpoint for admin appointments
              params: { status: selectedStatus } // Add filter parameter
         });
         console.log("Admin appointments received:", response.data);
@@ -170,8 +171,10 @@ async function fetchAndRenderAdminAppointments() {
 async function handleUpdateStatus(appointmentId, newStatus) {
     console.log(`Updating appointment ${appointmentId} to status ${newStatus}`);
     // Optional: Disable the specific button clicked
-    const clickedButton = event?.target; // NOTE: 'event' might not be available if called directly
-    if (clickedButton) clickedButton.disabled = true;
+    // To get the event object, the onclick handler in HTML would need to pass it: onclick="handleUpdateStatus(event, ${app.id}, 'confirmed')"
+    // For now, we'll assume event is not reliably passed this way without explicit change.
+    // const clickedButton = event?.target;
+    // if (clickedButton) clickedButton.disabled = true;
 
     try {
         if (typeof api === 'undefined') throw new Error("API config missing.");
@@ -188,7 +191,7 @@ async function handleUpdateStatus(appointmentId, newStatus) {
          alert(`خطأ: ${message}`); // Show error alert
          console.error("Update status error:", error);
          // Re-enable button on error ONLY if we captured it reliably
-         if (clickedButton) clickedButton.disabled = false;
+         // if (clickedButton) clickedButton.disabled = false;
     }
 }
 
@@ -226,10 +229,10 @@ async function submitPostpone(event) {
         return;
     }
 
-    const newDateValue = newDateInput.value; // Get value from input (expects dd/mm/yyyy)
+    const newDateValue = newDateInput.value; // Get value from input (expects dd/mm/yyyy from flatpickr)
     const newTimeValue = newTimeInput.value; // Get value from time input (hh:mm)
 
-    console.log('Validating Date Value:', JSON.stringify(newDateValue));
+    console.log('Validating Date Value from flatpickr:', JSON.stringify(newDateValue));
 
     // Basic frontend validation for the expected format (dd/mm/yyyy)
     // Regex allows d/m/yyyy or dd/mm/yyyy

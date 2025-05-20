@@ -12,51 +12,81 @@ const mapRoleToEnum = (roleString) => {
         'engineering': 'ENGINEERING',
         'owner': 'OWNER',
         'lab': 'LAB',
-        'admin': 'ADMIN' // Assuming you might add an admin registration later
+        'admin': 'ADMIN'
     };
-    return roleMap[roleString] || null; // Return null or throw error for invalid roles
+    // Ensure roleString is not null or undefined before calling toLowerCase
+    if (typeof roleString !== 'string') {
+        return null;
+    }
+    return roleMap[roleString.toLowerCase()] || null; // Convert to lowercase for lookup
 };
 
 
 exports.register = async (req, res, next) => {
-  const { fullName, email, role, companyName, password } = req.body;
+  // projectIds will be an array of integers from the frontend
+  const { fullName, email, role, companyName, password, projectIds } = req.body;
 
-  // Basic Validation
   if (!fullName || !email || !role || !companyName || !password || password.length < 8) {
     return res.status(400).json({ message: 'All fields are required and password must be at least 8 characters long.' });
   }
 
-  const prismaRole = mapRoleToEnum(role);
-  if (!prismaRole) {
-      return res.status(400).json({ message: 'Invalid role specified.' });
-  }
-  
-  const existingUser = await prisma.user.findUnique({
-    where: { email: email },
-  });
+  // The 'role' from frontend is already in uppercase e.g., "CONTRACTOR"
+  // The mapRoleToEnum function will convert it to lowercase for the lookup.
+  const prismaRole = mapRoleToEnum(role); // Pass the role as is
 
-  if (existingUser) {
-    return res.status(409).json({ message: 'Email address already in use.' });
+  if (!prismaRole) {
+      // This will now correctly find 'CONTRACTOR' in the map after it's lowercased.
+      return res.status(400).json({ message: 'Invalid role specified. Ensure the role is one of: CONTRACTOR, ENGINEERING, OWNER, LAB.' });
+  }
+
+  // Validate projectIds if provided
+  if (projectIds && (!Array.isArray(projectIds) || !projectIds.every(id => Number.isInteger(id)))) {
+    return res.status(400).json({ message: 'projectIds must be an array of integers.' });
   }
 
   try {
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+        return res.status(409).json({ message: 'Email address already in use.' });
+    }
+
     const hashedPassword = await hashPassword(password);
 
-    const user = await prisma.user.create({
-      data: {
+    const userData = {
         fullName,
         email,
-        role: prismaRole,
+        role: prismaRole, // This will now be the correct Prisma enum value, e.g., 'CONTRACTOR'
         companyName,
         password: hashedPassword,
-      },
+    };
+
+    // If projectIds are provided, set up the connect operation for the many-to-many relation
+    if (projectIds && projectIds.length > 0) {
+        userData.projects = {
+            connect: projectIds.map(id => ({ id: id }))
+        };
+    }
+
+    const user = await prisma.user.create({
+      data: userData,
+      include: { // Optionally include projects in the response
+          projects: { select: { id: true, name: true } }
+      }
     });
 
-    // Don't send password back
     const { password: _, ...userWithoutPassword } = user;
     res.status(201).json({ message: 'User registered successfully', user: userWithoutPassword });
   } catch (error) {
-    next(error); // Pass error to the error handling middleware
+    console.error("Registration Error:", error); // Log the full error on the server
+    // Handle cases where a projectId might not exist (Prisma will throw an error)
+    if (error.code === 'P2025' && error.message.includes('connect')) {
+        return res.status(400).json({ message: 'One or more provided project IDs do not exist.' });
+    }
+    // Handle other Prisma errors or general errors
+    if (error.code) { // Prisma error
+        return res.status(500).json({ message: `Database error: ${error.message}`});
+    }
+    next(error); // For other unexpected errors
   }
 };
 
@@ -95,6 +125,7 @@ exports.login = async (req, res, next) => {
       user: userWithoutPassword,
     });
   } catch (error) {
+    console.error("Login Error:", error);
     next(error);
   }
 };
@@ -112,7 +143,7 @@ exports.adminLogin = async (req, res, next) => {
       });
 
       // Check if user exists AND is an admin
-      if (!user || user.role !== 'ADMIN') {
+      if (!user || user.role !== 'ADMIN') { // Prisma Role enum is uppercase
         return res.status(401).json({ message: 'Invalid credentials or insufficient permissions' });
       }
 
@@ -135,6 +166,7 @@ exports.adminLogin = async (req, res, next) => {
         user: userWithoutPassword,
       });
     } catch (error) {
+      console.error("Admin Login Error:", error);
       next(error);
     }
   };

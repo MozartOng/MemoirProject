@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة المشاريع</title>
+    <link rel="stylesheet" href="css/admin-projects.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        /* Basic Modal Styles (can be moved to admin-projects.css) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 25px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 550px; /* Slightly wider for more fields */
+            border-radius: 8px;
+            text-align: right;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .modal-content h3 {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .close-modal-btn {
+            position: absolute;
+            top: 15px;
+            left: 20px; /* For RTL */
+            font-size: 28px;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            line-height: 1;
+        }
+        .close-modal-btn:hover { color: #333; }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #495057; }
+        .form-group input[type="text"],
+        .form-group input[type="date"], /* If using native date for simplicity */
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 0.95em;
+        }
+        .form-group textarea { min-height: 80px; resize: vertical; }
+        .modal-actions { display: flex; justify-content: flex-start; gap: 12px; margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee; }
+        .modal-actions button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .save-project-btn { background-color: #007bff; color: white; }
+        .cancel-project-btn { background-color: #6c757d; color: white; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo-placeholder">
+            <img src="logo.jpg" alt="شعار الشركة">
+        </div>
+        <div class="header-actions">
+            <button class="action-button" onclick="window.location.href='admin-dashboard.html'">لوحة التحكم</button>
+            <button class="action-button" onclick="window.location.href='admin-users.html'">إدارة المستخدمين</button>
+            <button class="action-button" onclick="window.location.href='admin-appointment.html'">إدارة الحجوزات</button>
+            <button class="action-button" onclick="logout()">تسجيل خروج الإدارة</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>إدارة المشاريع</h1>
+
+        <div class="page-actions">
+            <button id="addNewProjectBtn" class="add-new-btn">إضافة مشروع جديد</button>
+        </div>
+
+        <div class="form-section">
+            <h3>قائمة المشاريع</h3>
+            <div class="project-list" id="projectListContainer">
+                </div>
+        </div>
+    </div>
+
+    <div id="projectModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal-btn" onclick="closeProjectModal()">&times;</span>
+            <h3 id="projectModalTitle">إضافة مشروع جديد</h3>
+            <form id="projectForm">
+                <input type="hidden" id="projectId" name="projectId">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="projectName">اسم المشروع:</label>
+                        <input type="text" id="projectName" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="projectLocation">موقع المشروع:</label>
+                        <input type="text" id="projectLocation" name="location" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="projectStatus">حالة المشروع:</label>
+                    <select id="projectStatus" name="status" required>
+                        <option value="PLANNED">مخطط له</option>
+                        <option value="ONGOING">قيد التنفيذ</option>
+                        <option value="COMPLETED">مكتمل</option>
+                        <option value="ON_HOLD">معلق</option>
+                        <option value="CANCELLED">ملغى</option>
+                    </select>
+                </div>
+               
+                <div class="modal-actions">
+                    <button type="submit" class="save-project-btn">حفظ المشروع</button>
+                    <button type="button" class="cancel-project-btn" onclick="closeProjectModal()">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/ar.js"></script>
+    <script src="javascript/api.js"></script>
+    <script src="javascript/admin-projects.js"></script> <script>
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userData');
+            alert('تم تسجيل الخروج بنجاح.');
+            window.location.href = 'admin-login.html';
+        }
+    </script>
+</body>
+</html>

@@ -137,11 +137,12 @@ function renderAppointments(appointments) {
 
         // --- Card Inner HTML ---
         // Populate the card's HTML content using template literals
+        // **FIXED project name and location access here**
         card.innerHTML = `
             <div class="appointment-details">
                 <p><strong>تاريخ ووقت الموعد:</strong> ${formattedDateTime}</p>
-                <p><strong>اسم المشروع:</strong> ${app.projectName || 'غير متوفر'}</p>
-                <p><strong>موقع المشروع:</strong> ${app.projectLocation || 'غير متوفر'}</p>
+                <p><strong>اسم المشروع:</strong> ${app.project && app.project.name ? app.project.name : 'غير متوفر'}</p>
+                <p><strong>موقع المشروع:</strong> ${app.project && app.project.location ? app.project.location : 'غير متوفر'}</p>
                 <p><strong>سبب الزيارة:</strong> ${visitReasonText}</p> 
                 <p><strong>الوصف:</strong> ${app.visitDesc || '-'}</p>
                 <p><strong>الحالة:</strong> <span class="status ${statusClass}">${statusText}</span></p> 
@@ -157,7 +158,7 @@ function renderAppointments(appointments) {
 async function fetchAndRenderAppointments() {
     // Ensure the filter dropdown element exists before accessing its value
     const selectedStatus = statusFilterSelect ? statusFilterSelect.value : 'all';
-    console.log(`Workspaceing appointments with status: ${selectedStatus}`);
+    console.log(`Fetching appointments with status: ${selectedStatus}`); // Corrected log message
     setLoading('appointmentList', true); // Show loading indicator
 
     try {
@@ -169,7 +170,7 @@ async function fetchAndRenderAppointments() {
 
         // Make the API call using the 'api' instance
         // The interceptor in api.js will automatically add the Authorization token
-        const response = await api.get('/appointments', {
+        const response = await api.get('/appointments', { // Endpoint for user's appointments
             params: { status: selectedStatus } // Pass the selected filter as a query parameter
         });
         console.log("Appointments received:", response.data);

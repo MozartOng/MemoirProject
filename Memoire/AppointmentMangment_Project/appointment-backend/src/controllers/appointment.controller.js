@@ -1,327 +1,384 @@
 // src/controllers/appointment.controller.js
-const { PrismaClient, VisitReason, WorkshopDetail, AppointmentStatus , Role} = require('@prisma/client');
+const { PrismaClient, VisitReason, WorkshopDetail, AppointmentStatus, Role } = require('@prisma/client');
 const prisma = new PrismaClient();
 const path = require('path');
-const multer = require('multer');
-// Ensure date-fns is installed: npm install date-fns
-const { parse } = require('date-fns'); // Import the parse function
+// Assuming you are using date-fns for parsing dd/mm/yyyy format
+const { parse } = require('date-fns');
 
 // --- Helper Functions ---
 
-// Map frontend visit reason string to Prisma Enum
+/**
+ * Maps a string representation of visit reason to its corresponding Prisma enum value.
+ * @param {string} reasonString - The visit reason string (e.g., 'workshop', 'file', 'other').
+ * @returns {VisitReason|undefined} The Prisma enum value or undefined if not found.
+ */
 const mapVisitReasonToEnum = (reasonString) => {
     const map = {
         'other': VisitReason.OTHER,
         'file': VisitReason.FILE,
         'workshop': VisitReason.WORKSHOP
     };
-    return map[reasonString?.toLowerCase()]; // Use lowercase for safety
+    return map[reasonString?.toLowerCase()];
 };
 
-// Map frontend workshop detail string to Prisma Enum
-const mapWorkshopDetailToEnum = (detailString) => {
-    const map = {
-        'reexecution': WorkshopDetail.REEXECUTION,
-        'concreteTesting': WorkshopDetail.CONCRETE_TESTING,
-        'concreteWorks': WorkshopDetail.CONCRETE_WORKS,
-        'soil': WorkshopDetail.SOIL,
-        'notSpecified': WorkshopDetail.NOT_SPECIFIED
-        // Ensure frontend values match these keys exactly
-    };
-    return map[detailString];
-};
-
-// Map frontend status string to Prisma Enum (or 'all' for filtering)
+/**
+ * Maps a string representation of appointment status to its corresponding Prisma enum value.
+ * Allows 'all' for filtering purposes.
+ * @param {string} statusString - The status string (e.g., 'pending', 'confirmed', 'all').
+ * @returns {AppointmentStatus|'all'|undefined} The Prisma enum value, 'all', or undefined.
+ */
 const mapStatusToEnum = (statusString) => {
      const map = {
         'pending': AppointmentStatus.PENDING,
         'confirmed': AppointmentStatus.CONFIRMED,
-        'rejected': AppointmentStatus.REJECTED, // Added based on potential admin actions
+        'rejected': AppointmentStatus.REJECTED,
         'completed': AppointmentStatus.COMPLETED,
         'postponed': AppointmentStatus.POSTPONED
     };
-    // Allow 'all' for filtering, handle it separately in calling functions
     const lowerStatus = statusString?.toLowerCase();
     return lowerStatus === 'all' ? 'all' : map[lowerStatus];
 };
 
-
-// --- Function to parse dd/MM/yyyy date and HH:mm time ---
-// Parses the date string strictly assuming dd/MM/yyyy format.
+/**
+ * Parses a date string (dd/MM/yyyy) and a time string (HH:mm) and combines them into a JavaScript Date object.
+ * @param {string} dateStr_ddmmyyyy - The date string in dd/MM/yyyy format.
+ * @param {string} timeStr_hhmm - The time string in HH:mm format.
+ * @returns {Date|null} A Date object or null if parsing fails or inputs are missing.
+ */
 const parseAndCombineDateTime_DDMMYYYY = (dateStr_ddmmyyyy, timeStr_hhmm) => {
     if (!dateStr_ddmmyyyy || !timeStr_hhmm) {
         console.error('parseAndCombineDateTime_DDMMYYYY: Missing date or time string.');
         return null;
     }
     try {
-        const combinedStr = `${dateStr_ddmmyyyy} ${timeStr_hhmm}`;
-        const formatString = 'dd/MM/yyyy HH:mm'; // The format WE EXPECT from the frontend
-        // Parse using date-fns. Needs the exact format string.
+        // Example: dateStr_ddmmyyyy = "18/05/2025", timeStr_hhmm = "19:02"
+        const combinedStr = `${dateStr_ddmmyyyy} ${timeStr_hhmm}`; // "18/05/2025 19:02"
+        const formatString = 'dd/MM/yyyy HH:mm';
         const parsedDateTime = parse(combinedStr, formatString, new Date());
 
-        // Check if the parsed date is valid (e.g., not 31/02/2025)
         if (isNaN(parsedDateTime.getTime())) {
-            console.error(`parseAndCombineDateTime_DDMMYYYY: Failed to parse date string "${combinedStr}" with format "${formatString}". Check if frontend sent the correct format.`);
-            return null; // Parsing failed
+            console.error(`parseAndCombineDateTime_DDMMYYYY: Failed to parse date string "${combinedStr}" with format "${formatString}". Resulted in Invalid Date.`);
+            return null;
         }
         console.log(`parseAndCombineDateTime_DDMMYYYY: Parsed "${combinedStr}" to Date:`, parsedDateTime);
-        return parsedDateTime; // Return the valid JavaScript Date object
+        return parsedDateTime;
     } catch (e) {
-        console.error("Error parsing dd/MM/yyyy date/time:", e);
+        console.error(`Error parsing dd/MM/yyyy date/time for input "${dateStr_ddmmyyyy} ${timeStr_hhmm}":`, e);
         return null;
     }
 };
+// --- End Helper Functions ---
 
 
 // --- Controller Methods ---
 
-// Create Appointment Endpoint
+/**
+ * Creates a new appointment.
+ * Expects userId and userRole from req.user (set by auth middleware).
+ * Expects date as dd/MM/yyyy and time as HH:mm in req.body.
+ */
 exports.createAppointment = async (req, res, next) => {
     const {
-        projectName, projectLocation, visitReason: visitReasonStr,
-        workshopDetail: workshopDetailStr, visitDesc,
-        // EXPECTING 'date' in 'dd/mm/yyyy' format
-        date,
-        time
+        projectId, // string from form data
+        visitReason: visitReasonStr,
+        workshopDetail: workshopDetailStr, // e.g., "REEXECUTION"
+        visitDesc,
+        date, // Expected format: "dd/MM/yyyy"
+        time  // Expected format: "HH:mm"
     } = req.body;
-    const userId = req.user.id; // Assumes authenticateToken middleware adds req.user
-    const userRole = req.user.role; 
 
-    // Basic validation
-    if (!projectName || !projectLocation || !visitReasonStr || !visitDesc || !date || !time) {
-        return res.status(400).json({ message: 'Missing required appointment fields.' });
+    // Assuming userId and userRole are set by authentication middleware
+    if (!req.user || req.user.id === undefined || !req.user.role) {
+        return res.status(401).json({ message: 'User authentication required or role missing.' });
+    }
+    const userId = req.user.id;
+    const userRole = req.user.role; // This should be a Role enum value like Role.CONTRACTOR
+
+    // --- Basic Validations ---
+    if (projectId === undefined || projectId === null || !visitReasonStr || !visitDesc || !date || !time) {
+        return res.status(400).json({ message: 'Project ID, visit reason, description, date, and time are required.' });
+    }
+    const parsedProjectId = parseInt(projectId);
+    if (isNaN(parsedProjectId)) {
+        return res.status(400).json({ message: 'Project ID must be an integer.' });
     }
 
-    const visitReason = mapVisitReasonToEnum(visitReasonStr);
-    if (!visitReason) {
-        return res.status(400).json({ message: 'Invalid visit reason provided.' });
+    const visitReasonEnum = mapVisitReasonToEnum(visitReasonStr);
+    if (!visitReasonEnum) {
+        return res.status(400).json({ message: `Invalid visit reason provided: "${visitReasonStr}". Expected one of: other, file, workshop.` });
     }
 
-    let workshopDetail = null;
-    let workshopDetailMapped = false;
+    let finalWorkshopDetailEnum = null; // This will hold the validated Prisma enum value or null
 
-    if (visitReason === VisitReason.WORKSHOP) {
-        // Check if the user is a CONTRACTOR - only they are expected to provide details
-        if (userRole === Role.CONTRACTOR) { // Compare with Role enum from Prisma
-            // If contractor selected workshop, detail is mandatory
-            if (!workshopDetailStr || workshopDetailStr === 'none') {
-                // Error only if contractor didn't provide detail
-                return res.status(400).json({ message: 'Workshop detail is required for contractor workshop visits.' });
+    if (visitReasonEnum === VisitReason.WORKSHOP) {
+        // For WORKSHOP visits, workshopDetail logic depends on user role
+        if (userRole === Role.CONTRACTOR) { // Directly compare with imported Role enum
+            if (!workshopDetailStr || workshopDetailStr.toLowerCase() === 'none') {
+                return res.status(400).json({ message: 'Workshop detail is required for contractor workshop visits and cannot be "none".' });
             }
-            // If detail is provided, try to map it
-            workshopDetail = mapWorkshopDetailToEnum(workshopDetailStr); // Ensure mapWorkshopDetailToEnum exists
-            if (!workshopDetail) {
-                // Invalid detail value provided by contractor
-                return res.status(400).json({ message: 'Invalid workshop detail provided.' });
+            // Validate that the received workshopDetailStr is a valid member of the WorkshopDetail enum
+            if (!Object.values(WorkshopDetail).includes(workshopDetailStr)) {
+                return res.status(400).json({
+                    message: `Invalid workshop detail provided: "${workshopDetailStr}". Expected one of: ${Object.values(WorkshopDetail).join(', ')}`
+                });
             }
-            workshopDetailMapped = true; // Mark that we processed it
+            finalWorkshopDetailEnum = workshopDetailStr; // Assign the valid enum string
         } else {
-            // If user is NOT a contractor but chose workshop, we IGNORE workshopDetailStr
-            // It should be null/none from frontend, and we ensure workshopDetail remains null here.
-            console.log(`Non-contractor role (${userRole}) selected workshop reason. Ignoring workshopDetail.`);
+            // For non-contractors, workshopDetail is not applicable/set to null even if visit reason is WORKSHOP
+            console.log(`User role "${userRole}" selected visit reason WORKSHOP. Workshop detail will be set to null.`);
+            // finalWorkshopDetailEnum remains null
         }
+    } else if (workshopDetailStr && workshopDetailStr.toLowerCase() !== 'none') {
+        // If visitReason is not WORKSHOP, but workshopDetail is provided (and not 'none'), it's likely an error or should be ignored.
+        console.warn(`WorkshopDetail ("${workshopDetailStr}") provided for a non-WORKSHOP visitReason ("${visitReasonStr}"). It will be ignored.`);
+        // finalWorkshopDetailEnum remains null
     }
 
-    // --- Use the correct parsing function ---
+
     const proposedDateTime = parseAndCombineDateTime_DDMMYYYY(date, time);
     if (!proposedDateTime) {
-         // Parsing failed
-         return res.status(400).json({ message: 'Invalid date or time format. Backend expects dd/mm/yyyy and hh:mm.' });
+         return res.status(400).json({ message: 'Invalid date or time format. Ensure date is dd/mm/yyyy and time is hh:mm.' });
     }
-    // ---
 
-    // File Handling
-    const uploadedFiles = req.files; // From multer middleware
+    // File Handling (assuming multer middleware populates req.files)
+    const uploadedFiles = req.files;
     const filesToCreate = [];
     if (uploadedFiles) {
         for (const fieldName in uploadedFiles) {
-            uploadedFiles[fieldName].forEach(file => {
-                // Store path relative to the 'uploads' directory accessed by the server
-                filesToCreate.push({
-                    filePath: path.relative(path.join(__dirname, '../../uploads'), file.path),
-                    originalName: file.originalname,
-                    fileType: fieldName,
+           if (Array.isArray(uploadedFiles[fieldName])) { // Check if it's an array of files for that field
+                uploadedFiles[fieldName].forEach(file => {
+                    // Store path relative to a base 'uploads' directory for portability
+                    // Adjust the base path '../../uploads' as per your project structure
+                    const relativeFilePath = path.relative(path.resolve(__dirname, '../../uploads'), file.path);
+                    filesToCreate.push({
+                        filePath: relativeFilePath.replace(/\\/g, '/'), // Normalize path separators to forward slashes
+                        originalName: file.originalname,
+                        fileType: fieldName, // Use fieldName from multer as fileType
+                    });
                 });
-            });
+            }
         }
     }
-    // Note: Add validation here if specific files are MANDATORY for certain workshopDetail types
 
-    // Database Operation
     try {
+        // Verify project exists and the authenticated user is assigned to it
+        const projectUserLink = await prisma.project.findFirst({
+            where: {
+                id: parsedProjectId,
+                users: { some: { id: userId } }
+            }
+        });
+        if (!projectUserLink) {
+            return res.status(403).json({ message: "Access denied: Project not found or you are not assigned to this project." });
+        }
+
+        const appointmentData = {
+            userId,
+            projectId: parsedProjectId,
+            visitReason: visitReasonEnum,
+            visitDesc,
+            proposedDateTime,
+            status: AppointmentStatus.PENDING, // Default status
+        };
+
+        if (finalWorkshopDetailEnum) { // Only add workshopDetail if it's valid and set
+            appointmentData.workshopDetail = finalWorkshopDetailEnum;
+        }
+
+        if (filesToCreate.length > 0) {
+            appointmentData.files = { create: filesToCreate };
+        }
+
         const newAppointment = await prisma.appointment.create({
-            data: {
-                userId,
-                projectName,
-                projectLocation,
-                visitReason,
-                workshopDetail, // Null if not applicable
-                visitDesc,
-                proposedDateTime, // The parsed Date object
-                status: AppointmentStatus.PENDING, // Default status
-                // Conditionally create related file records
-                files: filesToCreate.length > 0 ? { create: filesToCreate } : undefined
-            },
-            include: { files: true } // Include created files in the response
+            data: appointmentData,
+            include: {
+                files: true,
+                project: { select: { id: true, name: true, location: true } },
+                user: { select: { id: true, fullName: true, companyName: true, role: true } }
+            }
         });
         res.status(201).json({ message: 'Appointment created successfully', appointment: newAppointment });
     } catch (error) {
-        // Let the global error handler manage database errors, etc.
+        console.error("Create Appointment Error:", error);
+        if (error.code === 'P2003' && error.meta?.field_name?.includes('projectId')) {
+            return res.status(400).json({ message: 'Invalid Project ID. The specified project does not exist.' });
+        }
+        if (error.code === 'P2002') {
+             return res.status(409).json({ message: `Database error: A unique constraint would be violated. Details: ${error.meta?.target}` });
+        }
+        if (error.code === 'P2025') {
+            return res.status(404).json({ message: `Database error: An operation failed because it depends on one or more records that were required but not found. ${error.meta?.cause}` });
+        }
+        if (error.message && error.message.includes("Invalid value for argument")) {
+             return res.status(400).json({ message: `Prisma data validation error: ${error.message}` });
+        }
         next(error);
     }
 };
 
-// --- Admin Postpone Endpoint ---
-// Handles postponing an appointment, expects date in dd/mm/yyyy
+/**
+ * Postpones an appointment (Admin only).
+ * Expects newDate (dd/mm/yyyy) and newTime (hh:mm) in req.body.
+ */
 exports.postponeAppointmentAdmin = async (req, res, next) => {
-    const { id } = req.params;
-    // EXPECTING 'newDate' in 'dd/mm/yyyy' format
+    const appointmentId = parseInt(req.params.id);
     const { newDate, newTime } = req.body;
 
+    if (isNaN(appointmentId)) {
+        return res.status(400).json({ message: 'Invalid appointment ID format.' });
+    }
     if (!newDate || !newTime) {
-         return res.status(400).json({ message: 'New date (dd/mm/yyyy) and time (hh:mm) are required.' });
+         return res.status(400).json({ message: 'New date (dd/mm/yyyy) and time (hh:mm) are required for postponement.' });
     }
 
-    // --- Use the correct parsing function ---
     const newProposedDateTime = parseAndCombineDateTime_DDMMYYYY(newDate, newTime);
     if (!newProposedDateTime) {
-        // Parsing failed
-        return res.status(400).json({ message: 'Invalid new date or time format. Backend expects dd/mm/yyyy and hh:mm.' });
+        return res.status(400).json({ message: 'Invalid new date or time format. Ensure date is dd/mm/yyyy and time is hh:mm.' });
     }
-    // ---
 
     try {
+        const appointmentToUpdate = await prisma.appointment.findUnique({ where: { id: appointmentId }});
+        if (!appointmentToUpdate) {
+            return res.status(404).json({ message: "Appointment not found for postponement." });
+        }
+
         const updatedAppointment = await prisma.appointment.update({
-            where: { id: parseInt(id) },
+            where: { id: appointmentId },
             data: {
-                proposedDateTime: newProposedDateTime, // Update with the parsed Date object
-                status: AppointmentStatus.POSTPONED // Explicitly set status
+                proposedDateTime: newProposedDateTime,
+                status: AppointmentStatus.POSTPONED
             },
-             // Include details needed by the frontend after update
              include: {
-                user: { select: { id: true, fullName: true, companyName: true } },
-                files: { select: { id: true, originalName: true, fileType: true, filePath: true } }
+                user: { select: { id: true, fullName: true, companyName: true, role: true } },
+                files: { select: { id: true, originalName: true, fileType: true, filePath: true } },
+                project: { select: { id: true, name: true, location: true, status: true } }
             }
         });
         res.status(200).json({ message: 'Appointment postponed successfully', appointment: updatedAppointment });
     } catch (error) {
-        next(error); // Handle errors (e.g., appointment not found)
+        console.error("Postpone Appointment Error:", error);
+        if (error.code === 'P2025') {
+            return res.status(404).json({ message: "Appointment not found (already deleted or invalid ID)." });
+        }
+        next(error);
     }
 };
 
-
-// --- Get User's Appointments ---
-// Retrieves appointments for the logged-in user, supports status filtering
+/**
+ * Gets appointments for the authenticated user.
+ * Allows filtering by status query parameter.
+ */
 exports.getUserAppointments = async (req, res, next) => {
-    const userId = req.user.id; // From authenticateToken middleware
-    const statusFilterStr = req.query.status; // Status from query param (e.g., 'pending')
-
-    const whereClause = { userId }; // Base filter: only user's appointments
-
-    // Apply status filter if provided and valid
-    if (statusFilterStr && statusFilterStr !== 'all') {
-        const statusEnum = mapStatusToEnum(statusFilterStr);
-        if (statusEnum && statusEnum !== 'all') { // Ensure it's a valid enum value
-             whereClause.status = statusEnum;
-        } else {
-            // Invalid status value provided
-            return res.status(400).json({ message: `Invalid status filter: ${statusFilterStr}` });
-        }
+    if (!req.user || req.user.id === undefined) {
+        return res.status(401).json({ message: 'User authentication required.' });
     }
-
-    try {
-        const appointments = await prisma.appointment.findMany({
-            where: whereClause,
-            orderBy: {
-                proposedDateTime: 'asc' // Order by proposed date
-            },
-            include: {
-                // Include file details for display
-                files: {
-                     select: { id: true, originalName: true, fileType: true, filePath: true }
-                }
-                // Do NOT include user here unless needed, as it's the user themselves
-            }
-        });
-        res.status(200).json(appointments);
-    } catch (error) {
-        next(error);
-    }
-};
-
-// --- Admin: Get All Appointments ---
-// Retrieves all appointments, supports status filtering
-exports.getAllAppointmentsAdmin = async (req, res, next) => {
-    // Admin role check should be handled by middleware on the route
+    const userId = req.user.id;
     const statusFilterStr = req.query.status;
+    const whereClause = { userId };
 
-    const whereClause = {}; // No initial user filter for admin
-
-    // Apply status filter if provided and valid
-    if (statusFilterStr && statusFilterStr !== 'all') {
+    if (statusFilterStr && statusFilterStr.toLowerCase() !== 'all') {
         const statusEnum = mapStatusToEnum(statusFilterStr);
-        if (statusEnum && statusEnum !== 'all') {
-             whereClause.status = statusEnum;
+        if (statusEnum && statusEnum !== 'all') { // Ensure 'all' from map is not used as Prisma enum
+            whereClause.status = statusEnum;
         } else {
-             return res.status(400).json({ message: `Invalid status filter: ${statusFilterStr}` });
+            return res.status(400).json({ message: `Invalid status filter: "${statusFilterStr}". Allowed values: pending, confirmed, rejected, completed, postponed, or all.` });
         }
     }
 
     try {
         const appointments = await prisma.appointment.findMany({
             where: whereClause,
-            orderBy: {
-                proposedDateTime: 'asc'
-            },
-             include: {
-                // Include basic user info for the admin list
-                user: {
-                    select: { id: true, fullName: true, companyName: true }
-                },
-                // Include files
-                files: {
-                     select: { id: true, originalName: true, fileType: true, filePath: true }
-                }
+            orderBy: { proposedDateTime: 'asc' },
+            include: {
+                files: { select: { id: true, originalName: true, fileType: true, filePath: true } },
+                project: { select: { id: true, name: true, location: true, status: true } }
             }
         });
         res.status(200).json(appointments);
     } catch (error) {
+        console.error("Get User Appointments Error:", error);
         next(error);
     }
 };
 
-// --- Admin: Update Appointment Status ---
-// Updates status to confirmed, rejected, or completed
-exports.updateAppointmentStatusAdmin = async (req, res, next) => {
-    const { id } = req.params; // Appointment ID from URL
-    const { status: statusStr } = req.body; // New status from request body
+/**
+ * Gets all appointments (Admin only).
+ * Allows filtering by status query parameter.
+ */
+exports.getAllAppointmentsAdmin = async (req, res, next) => {
+    const statusFilterStr = req.query.status;
+    const whereClause = {};
 
-    if (!statusStr) {
-        return res.status(400).json({ message: 'New status is required.' });
-    }
-
-    const newStatus = mapStatusToEnum(statusStr);
-
-    // Validate the new status for this specific action
-    if (!newStatus || newStatus === AppointmentStatus.PENDING || newStatus === AppointmentStatus.POSTPONED || newStatus === 'all') {
-         return res.status(400).json({ message: `Invalid status provided for this update action: ${statusStr}. Use 'confirmed', 'rejected', or 'completed'.` });
+    if (statusFilterStr && statusFilterStr.toLowerCase() !== 'all') {
+        const statusEnum = mapStatusToEnum(statusFilterStr);
+        if (statusEnum && statusEnum !== 'all') { // Ensure 'all' from map is not used as Prisma enum
+            whereClause.status = statusEnum;
+        } else {
+            return res.status(400).json({ message: `Invalid status filter: "${statusFilterStr}". Allowed values: pending, confirmed, rejected, completed, postponed, or all.` });
+        }
     }
 
     try {
-        const updatedAppointment = await prisma.appointment.update({
-            where: { id: parseInt(id) },
-            data: { status: newStatus }, // Update the status field
-             include: {
-                // Include data needed by frontend after update
-                user: { select: { id: true, fullName: true, companyName: true } },
-                files: { select: { id: true, originalName: true, fileType: true, filePath: true } }
+        const appointments = await prisma.appointment.findMany({
+            where: whereClause,
+            orderBy: { proposedDateTime: 'asc' },
+            include: {
+                user: { select: { id: true, fullName: true, companyName: true, role: true } },
+                files: { select: { id: true, originalName: true, fileType: true, filePath: true } },
+                project: { select: { id: true, name: true, location: true, status: true } }
             }
         });
-        res.status(200).json({ message: `Appointment status updated to ${newStatus}`, appointment: updatedAppointment });
+        res.status(200).json(appointments);
     } catch (error) {
-        // Handles errors like record not found (Prisma's P2025) via global handler
+        console.error("Get All Appointments Admin Error:", error);
         next(error);
     }
 };
 
-// --- Removed the duplicate, incorrect postponeAppointmentAdmin function ---
+/**
+ * Updates the status of an appointment (Admin only).
+ * Allowed statuses for update: CONFIRMED, REJECTED, COMPLETED.
+ */
+exports.updateAppointmentStatusAdmin = async (req, res, next) => {
+    const appointmentId = parseInt(req.params.id);
+    const { status: statusStr } = req.body;
+
+    if (isNaN(appointmentId)) {
+        return res.status(400).json({ message: 'Invalid appointment ID format.' });
+    }
+    if (!statusStr) {
+        return res.status(400).json({ message: 'New status is required for update.' });
+    }
+
+    const newStatusEnum = mapStatusToEnum(statusStr);
+    // Define statuses that an admin is allowed to set directly
+    const allowedUpdateStatuses = [AppointmentStatus.CONFIRMED, AppointmentStatus.REJECTED, AppointmentStatus.COMPLETED];
+
+    if (!newStatusEnum || newStatusEnum === 'all' || !allowedUpdateStatuses.includes(newStatusEnum)) {
+         return res.status(400).json({ message: `Invalid status for update: "${statusStr}". Allowed values: confirmed, rejected, completed.` });
+    }
+
+    try {
+        const appointmentToUpdate = await prisma.appointment.findUnique({ where: { id: appointmentId }});
+        if (!appointmentToUpdate) {
+            return res.status(404).json({ message: "Appointment not found for status update." });
+        }
+
+        const updatedAppointment = await prisma.appointment.update({
+            where: { id: appointmentId },
+            data: { status: newStatusEnum },
+             include: { // Include relevant data in the response
+                user: { select: { id: true, fullName: true, companyName: true, role: true } },
+                files: { select: { id: true, originalName: true, fileType: true, filePath: true } },
+                project: { select: { id: true, name: true, location: true, status: true } }
+            }
+        });
+        res.status(200).json({ message: `Appointment status updated to ${newStatusEnum}`, appointment: updatedAppointment });
+    } catch (error) {
+        console.error("Update Appointment Status Error:", error);
+        if (error.code === 'P2025') {
+            return res.status(404).json({ message: "Appointment not found (already deleted or invalid ID)." });
+        }
+        next(error);
+    }
+};

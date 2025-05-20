@@ -23,3 +23,17 @@ function logout() {
             // Adjust path as needed if files aren't in the same directory
             window.location.href = 'admin-login.html';
         }
+
+// Match values from your frontend select options
+enum WorkshopDetail {
+  REEXECUTION     
+  CONCRETE_TESTING 
+  CONCRETE_WORKS  
+  SOIL            
+  NOT_SPECIFIED   
+}
+
+  CONCRETE_TESTING
+  CONCRETE_WORKS  
+  SOIL           
+  NOT_SPECIFIED   

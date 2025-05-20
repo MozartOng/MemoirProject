@@ -3,35 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول / التسجيل</title>
-    <link rel="stylesheet" href="css/log.css">
-</head>
+    <title>تسجيل الدخول</title> <link rel="stylesheet" href="css/log.css"> </head>
 <body>
-    <!-- Header Section -->
     <header class="header">
         <div class="logo-placeholder">
-            <img src="logo.jpg" alt="شعار الشركة">
-        </div>
+            <img src="logo.jpg" alt="شعار الشركة"> </div>
         <div class="header-actions">
-            <button class="action-button" onclick="window.location.href='admin-login.html'">تسجيل دخول المسؤول</button>
+            <button class="action-button" onclick="window.location.href='admin-login.html'">دخول الإدارة</button>
         </div>
     </header>
 
     <div class="container">
-        <h1>تسجيل الدخول / التسجيل</h1>
+        <h1>تسجيل الدخول</h1>
 
-        <!-- Tabs for Login and Registration -->
-        <div class="tabs">
-            <button class="tab-button active" onclick="openTab('login')">تسجيل الدخول</button>
-            <button class="tab-button" onclick="openTab('register')">إنشاء حساب</button>
-        </div>
+        <div class="tabs" style="display: none;"> </div>
 
-        <!-- Login Form -->
-        <div id="login" class="tab-content" style="display: block;">
-            <div class="form-section">
+        <div id="login" class="tab-content" style="display: block;"> <div class="form-section">
                 <h3>تسجيل الدخول</h3>
-                <form id="loginForm" onsubmit="handleLogin(event)">
-                    <div class="form-group">
+                <form id="loginForm"> <div class="form-group">
                         <label for="loginEmail">البريد الإلكتروني:</label>
                         <input type="email" id="loginEmail" name="loginEmail" required>
                     </div>
@@ -44,44 +33,7 @@
             </div>
         </div>
 
-        <!-- Registration Form -->
-        <div id="register" class="tab-content" style="display: none;">
-            <div class="form-section">
-                <h3>إنشاء حساب</h3>
-                <form id="registerForm" onsubmit="handleRegister(event)">
-                    <div class="form-group">
-                        <label for="fullName">الاسم الكامل:</label>
-                        <input type="text" id="fullName" name="fullName" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="registerEmail">البريد الإلكتروني:</label>
-                        <input type="email" id="registerEmail" name="registerEmail" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="role">الدور:</label>
-                        <select id="role" name="role" required>
-                            <option value="">اختر الدور</option>
-                            <option value="contractor">مقاول</option>
-                            <option value="engineering">مكتب الدراسات</option>
-                            <option value="owner">صاحب المشروع</option>
-                            <option value="lab">مخبر</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="companyName">اسم الشركة:</label>
-                        <input type="text" id="companyName" name="companyName" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="registerPassword">كلمة المرور (8 أحرف على الأقل):</label>
-                        <input type="password" id="registerPassword" name="registerPassword" required minlength="8">
-                    </div>
-                    <button type="submit">إنشاء حساب</button>
-                </form>
-            </div>
-        </div>
-    </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        </div> <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="javascript/api.js"></script>
     <script src="javascript/login.js"></script>
 </body>

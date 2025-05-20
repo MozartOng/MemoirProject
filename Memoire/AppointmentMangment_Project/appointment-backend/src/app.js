@@ -2,43 +2,43 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-require('dotenv').config(); // Load environment variables
+require('dotenv').config();
 
+// Import Routes
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const appointmentRoutes = require('./routes/appointment.routes');
+const projectRoutes = require('./routes/project.routes'); // <-- NEW: Import project routes
+
+// Import Middleware
 const errorHandler = require('./middleware/error.middleware');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// --- Middleware ---
-app.use(cors()); // Enable CORS for all origins (adjust in production)
-app.use(express.json()); // Parse JSON request bodies
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request bodies
+// Core Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Serve uploaded files statically (adjust path as needed)
-// Allows frontend to access files via http://localhost:3001/uploads/filename.ext
+// Static File Serving
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// --- API Routes ---
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/appointments', appointmentRoutes);
+app.use('/api/projects', projectRoutes); // <-- NEW: Use project routes
 
-// --- Health Check Route ---
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'UP', timestamp: new Date().toISOString() });
-});
+// Health Check
+app.get('/health', (req, res) => { /* ... */ });
 
-// --- Global Error Handler ---
-// Must be the LAST middleware
+// Global Error Handler
 app.use(errorHandler);
 
-
-// --- Start Server ---
+// Start Server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
 
-module.exports = app; // Optional: for testing
+module.exports = app;

@@ -4,12 +4,101 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إدارة المستخدمين</title>
-    <link rel="stylesheet" href="css/admin-users.css">
+    <link rel="stylesheet" href="css/admin-users.css"> <style>
+        /* أنماط أساسية للنماذج المنبثقة (يمكن نقلها إلى admin-users.css) */
+        .modal {
+            display: none; /* مخفي بشكل افتراضي */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            direction: rtl;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 25px;
+            border: 1px solid #ddd;
+            width: 90%;
+            max-width: 500px; /* عرض مناسب للنماذج */
+            border-radius: 8px;
+            text-align: right;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .modal-content h4 {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.4em;
+        }
+        .close-modal-btn {
+            position: absolute;
+            top: 15px;
+            left: 20px; /* لليمين إلى اليسار */
+            font-size: 28px;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            line-height: 1;
+        }
+        .close-modal-btn:hover { color: #333; }
+
+        /* أنماط لمجموعات الحقول داخل النماذج */
+        .modal .form-group { margin-bottom: 18px; }
+        .modal .form-group label { display: block; margin-bottom: 7px; font-weight: 600; color: #495057; }
+        .modal .form-group input[type="text"],
+        .modal .form-group input[type="email"],
+        .modal .form-group input[type="password"],
+        .modal .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 0.95em;
+        }
+        .modal .project-checkbox-group {
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ced4da;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 6px;
+        }
+        .modal .project-checkbox-item {
+            display: block;
+            margin-bottom: 8px;
+        }
+        .modal .project-checkbox-item input[type="checkbox"] {
+            width: auto;
+            margin-left: 8px; /* لليمين إلى اليسار */
+        }
+        .modal .modal-actions { display: flex; justify-content: flex-start; gap: 12px; margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee; }
+        .modal .modal-actions button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+
+        /* أنماط خاصة بأزرار الحذف والتأكيد */
+        .confirm-delete-btn { background-color: #dc3545; color: white; }
+        .cancel-delete-btn { background-color: #6c757d; color: white; }
+        .page-actions { margin-bottom: 20px; text-align: left; } /* زر إضافة مستخدم جديد */
+        .add-new-btn { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1em; font-weight: 500; }
+        .add-new-btn:hover { background-color: #0056b3; }
+
+    </style>
 </head>
 <body>
     <header class="header">
         <div class="logo-placeholder">
-            <img src="logo.jpg" alt="شعار الشركة"> </div>
+            <img src="logo.jpg" alt="شعار الشركة">
+        </div>
         <div class="header-actions">
             <button class="action-button" onclick="window.location.href='admin-dashboard.html'">لوحة التحكم</button>
             <button class="action-button" onclick="window.location.href='admin-appointment.html'">إدارة الحجوزات</button>
@@ -19,6 +108,10 @@
 
     <div class="container">
         <h1>إدارة المستخدمين</h1>
+
+        <div class="page-actions">
+            <button id="addNewUserBtn" class="add-new-btn">إضافة مستخدم جديد</button>
+        </div>
 
         <div class="form-section">
             <h3>قائمة المستخدمين</h3>
@@ -34,7 +127,7 @@
             <p id="deleteUserModalText">هل أنت متأكد أنك تريد حذف هذا المستخدم؟ لا يمكن التراجع عن هذا الإجراء.</p>
             <div class="modal-actions">
                 <button id="confirmDeleteUserBtn" class="confirm-delete-btn">نعم، قم بالحذف</button>
-                <button class="cancel-delete-btn" onclick="closeDeleteModal()">إلغاء</button>
+                <button type="button" class="cancel-delete-btn" onclick="closeDeleteModal()">إلغاء</button>
             </div>
         </div>
     </div>
@@ -44,17 +137,18 @@
             <span class="close-modal-btn" onclick="closeUpdateModal()">&times;</span>
             <h4>تحديث بيانات المستخدم</h4>
             <form id="updateUserForm">
-                <input type="hidden" id="updateUserId">
+                <input type="hidden" id="updateUserId" name="userId">
                 <div class="form-group">
                     <label for="updateFullName">الاسم الكامل:</label>
                     <input type="text" id="updateFullName" name="fullName" required>
                 </div>
                 <div class="form-group">
                     <label for="updateEmail">البريد الإلكتروني:</label>
-                    <input type="email" id="updateEmail" name="email" required readonly> </div>
+                    <input type="email" id="updateEmail" name="email" required> </div>
                 <div class="form-group">
                     <label for="updateRole">الدور:</label>
                     <select id="updateRole" name="role" required>
+                        <option value="">اختر الدور...</option>
                         <option value="CONTRACTOR">مقاول</option>
                         <option value="ENGINEERING">مكتب الدراسات</option>
                         <option value="OWNER">صاحب المشروع</option>
@@ -65,24 +159,73 @@
                     <label for="updateCompanyName">اسم الشركة:</label>
                     <input type="text" id="updateCompanyName" name="companyName" required>
                 </div>
+                <div class="form-group">
+                    <label for="updateAssignedProjects">المشاريع المعينة:</label>
+                    <div id="updateProjectsCheckboxGroup" class="project-checkbox-group">
+                        <p>جاري تحميل المشاريع...</p>
+                    </div>
+                </div>
                 <div class="modal-actions">
-                    <button type="submit" class="confirm-delete-btn" style="background-color: #007bff;">حفظ التغييرات</button>
+                    <button type="submit" class="save-project-btn" style="background-color: #007bff;">حفظ التغييرات</button>
                     <button type="button" class="cancel-delete-btn" onclick="closeUpdateModal()">إلغاء</button>
                 </div>
             </form>
         </div>
     </div>
 
+    <div id="addUserModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal-btn" onclick="closeAddUserModal()">&times;</span>
+            <h4>إضافة مستخدم جديد</h4>
+            <form id="addUserForm">
+                <div class="form-group">
+                    <label for="addFullName">الاسم الكامل:</label>
+                    <input type="text" id="addFullName" name="fullName" required>
+                </div>
+                <div class="form-group">
+                    <label for="addEmail">البريد الإلكتروني:</label>
+                    <input type="email" id="addEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="addPassword">كلمة المرور:</label>
+                    <input type="password" id="addPassword" name="password" required minlength="8">
+                </div>
+                <div class="form-group">
+                    <label for="addRole">الدور:</label>
+                    <select id="addRole" name="role" required>
+                        <option value="">اختر الدور...</option>
+                        <option value="CONTRACTOR">مقاول</option>
+                        <option value="ENGINEERING">مكتب الدراسات</option>
+                        <option value="OWNER">صاحب المشروع</option>
+                        <option value="LAB">مخبر</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="addCompanyName">اسم الشركة:</label>
+                    <input type="text" id="addCompanyName" name="companyName" required>
+                </div>
+                <div class="form-group">
+                    <label for="assignProjects">تعيين المشاريع (اختياري):</label>
+                    <div id="assignProjectsCheckboxGroup" class="project-checkbox-group">
+                        <p>جاري تحميل المشاريع...</p>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="confirm-delete-btn" style="background-color: #28a745;">إضافة المستخدم</button>
+                    <button type="button" class="cancel-delete-btn" onclick="closeAddUserModal()">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="javascript/api.js"></script>
-    <script src="javascript/admin-user.js"></script> 
-    <script>
+    <script src="javascript/admin-user.js"></script> <script>
         function logout() {
             localStorage.removeItem('authToken');
             localStorage.removeItem('userData');
             alert('تم تسجيل الخروج بنجاح.');
-            window.location.href = 'admin-login.html'; // Adjust path if needed
+            window.location.href = 'admin-login.html';
         }
     </script>
 </body>

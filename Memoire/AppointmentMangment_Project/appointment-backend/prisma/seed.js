@@ -1,75 +1,82 @@
 // prisma/seed.js
-const { PrismaClient, Role } = require('@prisma/client');
+const { PrismaClient, Role } = require('@prisma/client'); // Assuming Role is an enum in your Prisma schema
 // Make sure the path to your utils is correct relative to the prisma folder
-const { hashPassword } = require('../src/utils/password.util'); // Adjust path if needed
+// For example, if seed.js is in 'prisma/' and password.util.js is in 'src/utils/'
+const { hashPassword } = require('../src/utils/password.util');
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log(`Start seeding ...`);
+  console.log(`🚀 Starting seeding process for Admin user only...`);
 
-  // --- Define Admin User ---
-  const adminEmail = 'admin@example.com'; // Choose admin email
-  const plainAdminPassword = 'adminpassword123'; // CHOOSE A STRONG PASSWORD
-  const adminFullName = 'Administrator';
-  const adminCompanyName = 'Control Center';
+  // --- Configuration for Admin User (Hardcoded) ---
+  const adminEmail = 'admin1@example.com';
+  const plainAdminPassword = 'admin123'; // IMPORTANT: Choose a strong password if this were a real scenario.
+  const adminFullName = 'Administrator User';
+  const adminCompanyName = 'Global Corp Admin';
   // ---
 
   if (!plainAdminPassword) {
-      throw new Error("Admin password cannot be empty in seed script.");
+    console.error("❌ Critical Error: Admin password is not defined in the script.");
+    throw new Error("Admin password cannot be empty in seed script.");
+  }
+  // Ensure Role.ADMIN is valid
+  if (Role.ADMIN === undefined) {
+    console.error("❌ Critical Prerequisite Missing: 'Role.ADMIN' is undefined. Please ensure 'ADMIN' is defined in your 'Role' enum in 'prisma/schema.prisma' and run 'npx prisma generate'.");
+    throw new Error("'Role.ADMIN' is not defined. Check your Prisma schema.");
   }
 
-  const hashedPassword = await hashPassword(plainAdminPassword);
-  console.log(`Password for ${adminEmail} hashed.`);
+  const hashedAdminPassword = await hashPassword(plainAdminPassword);
+  console.log(`🔑 Password for admin user ${adminEmail} has been hashed.`);
 
-  // Use upsert: Creates user if email doesn't exist, updates if it does.
   const adminUser = await prisma.user.upsert({
-    where: { email: adminEmail }, // Unique identifier to find user
-    update: { // What fields to update if user exists (optional)
-        password: hashedPassword,
-        role: Role.ADMIN, // Ensure role is ADMIN
-        fullName: adminFullName,
-        companyName: adminCompanyName,
+    where: { email: adminEmail },
+    update: {
+      password: hashedAdminPassword,
+      role: Role.ADMIN,
+      fullName: adminFullName,
+      companyName: adminCompanyName,
     },
-    create: { // Data to use if creating a new user
+    create: {
       email: adminEmail,
       fullName: adminFullName,
-      password: hashedPassword,
-      role: Role.ADMIN, // Set the role explicitly
+      password: hashedAdminPassword,
+      role: Role.ADMIN,
       companyName: adminCompanyName,
     },
   });
-  console.log(`Upserted admin user: ${adminUser.email} (ID: ${adminUser.id})`);
+  console.log(`👤 Admin user upserted: ${adminUser.email} (ID: ${adminUser.id})`);
 
-  // --- Add other seed data if needed ---
-  // Example: Create a regular user
-  /*
-  const userEmail = 'contractor@example.com';
-  const plainUserPassword = 'password123';
-  const userHashedPassword = await hashPassword(plainUserPassword);
-  const regularUser = await prisma.user.upsert({
-      where: { email: userEmail },
-      update: {},
-      create: {
-          email: userEmail,
-          fullName: 'Test Contractor',
-          password: userHashedPassword,
-          role: Role.CONTRACTOR,
-          companyName: 'Build Inc.'
-      }
-  });
-  console.log(`Upserted regular user: ${regularUser.email}`);
-  */
-
-  console.log(`Seeding finished.`);
+  console.log(`✅ Seeding finished successfully. Only Admin user was processed.`);
 }
 
 main()
   .catch((e) => {
-    console.error("Error during seeding:", e);
+    console.error("❌ Error during seeding process:", e);
     process.exit(1);
   })
   .finally(async () => {
-    // Close Prisma Client connection
+    console.log(`🔚 Disconnecting Prisma Client...`);
     await prisma.$disconnect();
+    console.log(`🔌 Prisma Client disconnected.`);
   });
+
+/*
+To run this seed script:
+1. Verify your `prisma/schema.prisma` has the correct `Role` enum (e.g., includes ADMIN).
+   enum Role {
+     ADMIN
+     // Other roles if they exist, but this script only uses ADMIN
+   }
+   model User {
+     // ...
+     role Role
+   }
+2. Run `npx prisma generate` after any schema changes.
+3. Run `npx prisma db push` (if you don't use migrations and want to sync schema) or `npx prisma migrate dev`.
+4. Add a script to your package.json:
+   "scripts": {
+     "db:seed": "node prisma/seed.js"
+   }
+5. Run the seed: `npm run db:seed` or `yarn db:seed`
+*/

@@ -7,7 +7,6 @@ function displayUserListError(message) {
     if (userListDiv) {
         userListDiv.innerHTML = `<p style="color: red;" class="error-message">خطأ: ${message}</p>`;
     } else {
-        // Fallback if the main div isn't found (should not happen if HTML is correct)
         alert(`خطأ: ${message}`);
     }
 }
@@ -18,28 +17,40 @@ function setUserListLoading(isLoading) {
         if (isLoading) {
             userListDiv.innerHTML = '<p class="loading-message">جاري تحميل المستخدمين...</p>';
         }
-        // When loading is false, the content will be replaced by renderUsers() or displayUserListError()
+        // Content will be replaced by renderUsers() or displayUserListError()
     }
 }
 // --- End Helper Functions ---
 
 // --- Global DOM Element References ---
 const userListDiv = document.getElementById('userList');
+const addNewUserBtn = document.getElementById('addNewUserBtn');
 
 // Delete Modal Elements
 const deleteUserModal = document.getElementById('deleteUserModal');
 const confirmDeleteUserBtn = document.getElementById('confirmDeleteUserBtn');
 const deleteUserModalText = document.getElementById('deleteUserModalText');
-let userIdToDelete = null; // Stores the ID of the user targeted for deletion
+let userIdToDelete = null;
 
-// Update Modal Elements (for future implementation)
+// Update Modal Elements
 const updateUserModal = document.getElementById('updateUserModal');
 const updateUserForm = document.getElementById('updateUserForm');
 const updateUserIdInput = document.getElementById('updateUserId');
 const updateFullNameInput = document.getElementById('updateFullName');
-const updateEmailInput = document.getElementById('updateEmail'); // Usually readonly or handled with care
+const updateEmailInput = document.getElementById('updateEmail');
 const updateRoleInput = document.getElementById('updateRole');
 const updateCompanyNameInput = document.getElementById('updateCompanyName');
+const updateProjectsCheckboxGroup = document.getElementById('updateProjectsCheckboxGroup'); // For project checkboxes in Update Modal
+
+// Add User Modal Elements
+const addUserModal = document.getElementById('addUserModal');
+const addUserForm = document.getElementById('addUserForm');
+const addFullNameInput = document.getElementById('addFullName');
+const addEmailInput = document.getElementById('addEmail');
+const addPasswordInput = document.getElementById('addPassword');
+const addRoleInput = document.getElementById('addRole');
+const addCompanyNameInput = document.getElementById('addCompanyName');
+const assignProjectsCheckboxGroup = document.getElementById('assignProjectsCheckboxGroup'); // For project checkboxes in Add Modal
 // --- End Global DOM Element References ---
 
 
@@ -49,7 +60,7 @@ const roleTranslations = {
     ENGINEERING: 'مكتب الدراسات',
     OWNER: 'صاحب المشروع',
     LAB: 'مخبر',
-    ADMIN: 'مدير النظام' // Note: Admins should be filtered out by the backend
+    ADMIN: 'مدير النظام' // Note: Admins should be filtered out by the backend from the list
 };
 
 // --- Function to Render User Cards into the HTML ---
@@ -61,17 +72,20 @@ function renderUsers(users) {
     userListDiv.innerHTML = ''; // Clear previous list or loading/error message
 
     if (!users || users.length === 0) {
-        userListDiv.innerHTML = '<p>لا يوجد مستخدمين لعرضهم.</p>';
+        userListDiv.innerHTML = '<p>لا يوجد مستخدمين لعرضهم. قم بإضافة مستخدم جديد إذا كنت مسؤولاً.</p>';
         return;
     }
 
     users.forEach(user => {
         const card = document.createElement('div');
-        card.className = 'user-card'; // Apply CSS class for styling
-        card.setAttribute('data-user-id', user.id); // Store user ID for easy access
+        card.className = 'user-card';
+        card.setAttribute('data-user-id', user.id);
 
-        // Get the Arabic translation for the role, or use the original role if not found
         const translatedRole = roleTranslations[user.role] || user.role;
+        let assignedProjectsHtml = 'لا توجد مشاريع معينة';
+        if (user.projects && user.projects.length > 0) {
+            assignedProjectsHtml = user.projects.map(p => p.name).join('، ');
+        }
 
         card.innerHTML = `
             <div class="user-details">
@@ -79,6 +93,7 @@ function renderUsers(users) {
                 <p><strong>البريد الإلكتروني:</strong> ${user.email || 'N/A'}</p>
                 <p><strong>الدور:</strong> ${translatedRole}</p>
                 <p><strong>اسم الشركة:</strong> ${user.companyName || 'N/A'}</p>
+                <p><strong>المشاريع المعينة:</strong> ${assignedProjectsHtml}</p>
                 <p><strong>تاريخ التسجيل:</strong> ${user.createdAt ? new Date(user.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}</p>
             </div>
             <div class="user-actions">
@@ -86,7 +101,6 @@ function renderUsers(users) {
                 <button class="delete-btn" onclick="openDeleteModal(${user.id}, '${user.fullName.replace(/'/g, "\\'")}')">حذف</button>
             </div>
         `;
-        // Note: Escaped single quotes in userName for onclick handler: '${user.fullName.replace(/'/g, "\\'")}'
         userListDiv.appendChild(card);
     });
 }
@@ -94,148 +108,155 @@ function renderUsers(users) {
 // --- Function to Fetch Users from the Backend ---
 async function fetchAndRenderUsers() {
     console.log("Fetching users for admin view...");
-    setUserListLoading(true); // Show loading message
+    setUserListLoading(true);
     try {
-        // Ensure the 'api' object (Axios instance from api.js) is available
         if (typeof api === 'undefined') {
             throw new Error("API configuration is missing. Ensure api.js is loaded before admin-users.js.");
         }
-        // Make the API call. The admin auth token is added by the interceptor in api.js
-        const response = await api.get('/users'); // Backend should filter out admins
+        const response = await api.get('/users'); // Backend should filter out admins if this is for a general list
         console.log("Users received:", response.data);
-        renderUsers(response.data); // Display the fetched users
-
+        renderUsers(response.data);
     } catch (error) {
-        // Handle errors (network, server, unauthorized access from interceptor)
         const message = error.response?.data?.message || error.message || 'فشل تحميل قائمة المستخدمين.';
-        displayUserListError(message); // Show error message in the user list area
+        displayUserListError(message);
         console.error("Fetch users error:", error);
     }
-    // setUserListLoading(false); // Loading state is cleared by renderUsers or displayUserListError
 }
 
 // --- Delete Modal Functions ---
 function openDeleteModal(id, name) {
     if (!deleteUserModal || !deleteUserModalText || !confirmDeleteUserBtn) {
-        console.error("Delete modal elements are not found in the HTML.");
+        console.error("Delete modal elements are not found.");
         alert("خطأ: لا يمكن فتح نافذة تأكيد الحذف.");
         return;
     }
-    userIdToDelete = id; // Store the ID of the user to be deleted
-    // Set personalized confirmation message
+    userIdToDelete = id;
     deleteUserModalText.textContent = `هل أنت متأكد أنك تريد حذف المستخدم ${name} (ID: ${id})؟ لا يمكن التراجع عن هذا الإجراء.`;
-    deleteUserModal.style.display = 'block'; // Show the modal
+    deleteUserModal.style.display = 'block';
 }
 
 function closeDeleteModal() {
-    if (deleteUserModal) {
-        deleteUserModal.style.display = 'none'; // Hide the modal
-    }
-    userIdToDelete = null; // Reset the stored ID
+    if (deleteUserModal) deleteUserModal.style.display = 'none';
+    userIdToDelete = null;
 }
 
-// --- Handle Actual User Deletion After Confirmation ---
 async function confirmUserDeletion() {
-    if (!userIdToDelete) {
-        console.warn("No user ID set for deletion.");
-        return;
-    }
-
+    if (!userIdToDelete) return;
     console.log(`Attempting to delete user ${userIdToDelete}...`);
-    // Disable button and show loading text during API call
     if (confirmDeleteUserBtn) {
         confirmDeleteUserBtn.disabled = true;
         confirmDeleteUserBtn.textContent = 'جاري الحذف...';
     }
-
     try {
-        if (typeof api === 'undefined') throw new Error("API configuration is missing.");
-        // Make the DELETE request to the backend
+        if (typeof api === 'undefined') throw new Error("API config missing.");
         const response = await api.delete(`/users/${userIdToDelete}`);
-        console.log("Delete response:", response.data);
         alert(response.data.message || `تم حذف المستخدم بنجاح.`);
-        closeDeleteModal(); // Close the modal
-        fetchAndRenderUsers(); // Refresh the user list to reflect the deletion
-
+        closeDeleteModal();
+        fetchAndRenderUsers();
     } catch (error) {
         const message = error.response?.data?.message || error.message || `فشل حذف المستخدم.`;
         alert(`خطأ: ${message}`);
         console.error(`Delete user ${userIdToDelete} error:`, error);
     } finally {
-        // Re-enable button and reset text
         if (confirmDeleteUserBtn) {
             confirmDeleteUserBtn.disabled = false;
             confirmDeleteUserBtn.textContent = 'نعم، قم بالحذف';
         }
     }
 }
+// --- End Delete Modal Functions ---
 
-// --- Update Modal Functions (Placeholders and Basic Setup) ---
-function openUpdateUserModal(userId) {
+// --- Update Modal Functions ---
+async function openUpdateUserModal(userId) {
     console.log(`Opening update modal for user ID: ${userId}`);
-    if (!updateUserModal || !updateUserForm || !updateUserIdInput || !updateFullNameInput || !updateEmailInput || !updateRoleInput || !updateCompanyNameInput) {
-        console.error("Update user modal or its form elements are not found in the HTML.");
+    if (!updateUserModal || !updateUserForm || !updateProjectsCheckboxGroup) {
+        console.error("Update user modal or its project checkbox group not found.");
         alert("خطأ: لا يمكن فتح نافذة تحديث بيانات المستخدم.");
         return;
     }
 
-    // Show loading or fetch user details to populate the form
-    alert(`خاصية تحديث المستخدم (ID: ${userId}) سيتم تنفيذها. الآن سنقوم بجلب بيانات المستخدم.`);
+    updateUserForm.reset();
+    updateUserIdInput.value = userId;
+    updateProjectsCheckboxGroup.innerHTML = '<p>جاري تحميل المشاريع...</p>';
+    updateUserModal.style.display = 'block';
 
-    setUserListLoading(true); // Or a specific loader for the modal
+    try {
+        if (typeof api === 'undefined') throw new Error("API config missing.");
+        // **FIXED: Changed /projects to /projects/admin-list or a more suitable endpoint**
+        // Using /projects/admin-list as it's an existing endpoint that lists all projects for admin.
+        // Alternatively, /projects/for-selection could be used if its logic is adjusted
+        // for an admin fetching all projects for assignment purposes.
+        const [userResponse, allProjectsResponse] = await Promise.all([
+            api.get(`/users/${userId}`),
+            api.get('/projects/admin-list') // Or '/projects/for-selection' if more appropriate
+        ]);
 
-    api.get(`/users/${userId}`) // Assumes backend route GET /api/users/:id exists
-        .then(response => {
-            const user = response.data;
-            if (user) {
-                updateUserIdInput.value = user.id;
-                updateFullNameInput.value = user.fullName || '';
-                updateEmailInput.value = user.email || ''; // Email is often readonly
-                updateRoleInput.value = user.role || '';   // Ensure options match Prisma Role enum
-                updateCompanyNameInput.value = user.companyName || '';
-                updateUserModal.style.display = 'block';
+        const userToUpdate = userResponse.data;
+        const allProjects = allProjectsResponse.data; // This will be an array of project objects
+
+        if (userToUpdate) {
+            updateFullNameInput.value = userToUpdate.fullName || '';
+            updateEmailInput.value = userToUpdate.email || '';
+            updateRoleInput.value = userToUpdate.role || ''; // Assumes role is sent as the enum string
+            updateCompanyNameInput.value = userToUpdate.companyName || '';
+
+            updateProjectsCheckboxGroup.innerHTML = ''; // Clear loading message
+            const assignedProjectIds = new Set(userToUpdate.projects?.map(p => p.id) || []);
+
+            if (allProjects && allProjects.length > 0) {
+                allProjects.forEach(project => {
+                    const isChecked = assignedProjectIds.has(project.id);
+                    const checkboxItem = document.createElement('div');
+                    checkboxItem.className = 'project-checkbox-item'; // Add class for styling if needed
+                    checkboxItem.innerHTML = `
+                        <input type="checkbox" id="update_project_${project.id}" name="projectIds" value="${project.id}" ${isChecked ? 'checked' : ''}>
+                        <label for="update_project_${project.id}">${project.name} (${project.location || 'N/A'})</label>
+                    `;
+                    updateProjectsCheckboxGroup.appendChild(checkboxItem);
+                });
             } else {
-                alert("لم يتم العثور على تفاصيل المستخدم.");
+                updateProjectsCheckboxGroup.innerHTML = '<p>لا توجد مشاريع متاحة لتعيينها.</p>';
             }
-        })
-        .catch(error => {
-            const message = error.response?.data?.message || error.message || "فشل جلب بيانات المستخدم للتحديث.";
-            alert(`خطأ: ${message}`);
-            console.error("Error fetching user for update:", error);
-        })
-        .finally(() => {
-            setUserListLoading(false); // Or specific modal loader
-        });
+        } else {
+            alert("لم يتم العثور على تفاصيل المستخدم.");
+            closeUpdateModal();
+        }
+    } catch (error) {
+        const message = error.response?.data?.message || error.message || "فشل جلب بيانات المستخدم أو المشاريع للتحديث.";
+        alert(`خطأ: ${message}`);
+        console.error("Error fetching data for update modal:", error);
+        // Optionally, provide more specific feedback in the modal itself
+        updateProjectsCheckboxGroup.innerHTML = `<p style="color:red;">${message}</p>`;
+        // Do not close modal on error here, let user see the error.
+        // closeUpdateModal();
+    }
 }
 
 function closeUpdateModal() {
-    if (updateUserModal) {
-        updateUserModal.style.display = 'none'; // Hide the modal
-    }
-    if (updateUserForm) {
-        updateUserForm.reset(); // Reset form fields when closing
-    }
+    if (updateUserModal) updateUserModal.style.display = 'none';
+    if (updateUserForm) updateUserForm.reset();
 }
 
-// Handle the submission of the update user form
 async function handleUpdateUserFormSubmit(event) {
-    event.preventDefault(); // Prevent default form submission
-    if (!updateUserForm || !updateUserIdInput.value) {
-        console.error("Update form or user ID input is missing for submission.");
-        return;
-    }
+    event.preventDefault();
+    if (!updateUserForm || !updateUserIdInput.value) return;
 
     const userId = updateUserIdInput.value;
+    const selectedProjectIds = [];
+    updateUserForm.querySelectorAll('input[name="projectIds"]:checked').forEach(checkbox => {
+        selectedProjectIds.push(parseInt(checkbox.value));
+    });
+
     const updatedData = {
         fullName: updateFullNameInput.value,
-        email: updateEmailInput.value, // If email is editable, backend must handle uniqueness checks
-        role: updateRoleInput.value,     // Ensure this value is one of your Prisma Role enum strings
+        email: updateEmailInput.value,
+        role: updateRoleInput.value, // This should be the string value like "CONTRACTOR"
         companyName: updateCompanyNameInput.value,
+        projectIds: selectedProjectIds // Backend expects an array of integers
     };
 
-    // Basic validation for required fields
     if (!updatedData.fullName || !updatedData.email || !updatedData.role || !updatedData.companyName) {
-        alert("يرجى ملء جميع الحقول المطلوبة في نموذج التحديث.");
+        alert("يرجى ملء جميع الحقول الأساسية في نموذج التحديث.");
         return;
     }
 
@@ -247,14 +268,11 @@ async function handleUpdateUserFormSubmit(event) {
     }
 
     try {
-        if (typeof api === 'undefined') throw new Error("API configuration is missing.");
-        // Make PATCH request to the backend
-        const response = await api.patch(`/users/${userId}`, updatedData);
-        console.log("Update response:", response.data);
+        if (typeof api === 'undefined') throw new Error("API config missing.");
+        const response = await api.patch(`/users/${userId}`, updatedData); // PATCH to /api/users/:id
         alert(response.data.message || "تم تحديث بيانات المستخدم بنجاح.");
-        closeUpdateModal(); // Close the modal
-        fetchAndRenderUsers(); // Refresh the user list
-
+        closeUpdateModal();
+        fetchAndRenderUsers();
     } catch (error) {
         const message = error.response?.data?.message || error.message || "فشل تحديث بيانات المستخدم.";
         alert(`خطأ: ${message}`);
@@ -266,67 +284,148 @@ async function handleUpdateUserFormSubmit(event) {
         }
     }
 }
+// --- End Update Modal Functions ---
+
+// --- Add User Modal Functions ---
+async function openAddUserModal() {
+    if (!addUserModal || !addUserForm || !assignProjectsCheckboxGroup) {
+        console.error("Add User Modal or its components not found.");
+        alert("خطأ: لا يمكن فتح نافذة إضافة مستخدم.");
+        return;
+    }
+    addUserForm.reset();
+    assignProjectsCheckboxGroup.innerHTML = '<p>جاري تحميل المشاريع...</p>';
+    addUserModal.style.display = 'block';
+
+    try {
+        if (typeof api === 'undefined') throw new Error("API config missing.");
+        // **FIXED: Changed /projects to /projects/admin-list or a more suitable endpoint**
+        const response = await api.get('/projects/admin-list'); // Or '/projects/for-selection'
+        const projects = response.data;
+        assignProjectsCheckboxGroup.innerHTML = '';
+        if (projects && projects.length > 0) {
+            projects.forEach(project => {
+                const checkboxItem = document.createElement('div');
+                checkboxItem.className = 'project-checkbox-item';
+                checkboxItem.innerHTML = `
+                    <input type="checkbox" id="add_project_${project.id}" name="projectIds" value="${project.id}">
+                    <label for="add_project_${project.id}">${project.name} (${project.location || 'N/A'})</label>
+                `;
+                assignProjectsCheckboxGroup.appendChild(checkboxItem);
+            });
+        } else {
+            assignProjectsCheckboxGroup.innerHTML = '<p>لا توجد مشاريع متاحة لتعيينها.</p>';
+        }
+    } catch (error) {
+        console.error("Failed to fetch projects for Add User modal:", error);
+        assignProjectsCheckboxGroup.innerHTML = `<p style="color:red;">فشل تحميل قائمة المشاريع. (${error.message})</p>`;
+    }
+}
+
+function closeAddUserModal() {
+    if (addUserModal) addUserModal.style.display = 'none';
+}
+
+async function handleAddUserFormSubmit(event) {
+    event.preventDefault();
+    if (!addUserForm) return;
+
+    const submitButton = addUserForm.querySelector('button[type="submit"]');
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = 'جاري الإضافة...';
+    }
+
+    const selectedProjectIds = [];
+    addUserForm.querySelectorAll('input[name="projectIds"]:checked').forEach(checkbox => {
+        selectedProjectIds.push(parseInt(checkbox.value));
+    });
+
+    const newUserData = {
+        fullName: addFullNameInput.value,
+        email: addEmailInput.value,
+        password: addPasswordInput.value,
+        role: addRoleInput.value, // This should be the string value like "CONTRACTOR"
+        companyName: addCompanyNameInput.value,
+        projectIds: selectedProjectIds // Backend expects an array of integers
+    };
+
+    if (!newUserData.fullName || !newUserData.email || !newUserData.password || !newUserData.role || !newUserData.companyName) {
+        alert("يرجى ملء جميع الحقول الأساسية للمستخدم.");
+        if (submitButton) { submitButton.disabled = false; submitButton.textContent = 'إضافة المستخدم'; }
+        return;
+    }
+    if (newUserData.password.length < 8) {
+        alert("يجب أن تكون كلمة المرور 8 أحرف على الأقل.");
+        if (submitButton) { submitButton.disabled = false; submitButton.textContent = 'إضافة المستخدم'; }
+        return;
+    }
+
+    try {
+        if (typeof api === 'undefined') throw new Error("API config missing.");
+        const response = await api.post('/auth/register', newUserData); // POST to /api/auth/register
+        alert(response.data.message || 'تم إضافة المستخدم بنجاح!');
+        closeAddUserModal();
+        fetchAndRenderUsers();
+    } catch (error) {
+        const message = error.response?.data?.message || error.message || 'فشل إضافة المستخدم.';
+        alert(`خطأ: ${message}`);
+        console.error("Add User error:", error);
+    } finally {
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = 'إضافة المستخدم';
+        }
+    }
+}
+// --- End Add User Modal Functions ---
 
 
-// --- Event Listener Setup (Runs when the page is fully loaded) ---
+// --- Event Listener Setup ---
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM Loaded for admin-users.js");
-
-    // --- Admin Authentication Check ---
+    // Admin Auth Check
     const userDataString = localStorage.getItem('userData');
     const token = localStorage.getItem('authToken');
     let isAdminUser = false;
     try {
         const userData = userDataString ? JSON.parse(userDataString) : null;
-        // Ensure role is exactly 'ADMIN' (case-sensitive)
-        if (token && userData && userData.role === 'ADMIN') {
-            isAdminUser = true;
-        }
-    } catch (e) { console.error("Error parsing user data for auth check:", e); }
+        if (token && userData && userData.role === 'ADMIN') isAdminUser = true;
+    } catch (e) { console.error("Auth check error:", e); }
 
     if (!isAdminUser) {
         alert('Access Denied. Please log in as an administrator.');
-        window.location.href = 'admin-login.html'; // Adjust path if needed
-        return; // Stop further execution
+        window.location.href = 'admin-login.html';
+        return;
     }
-    console.log("Admin authenticated. Initializing user management page.");
-    // --- End Admin Auth Check ---
+    console.log("Admin authenticated.");
 
-    // --- Attach Event Listeners for Modals ---
-    // Delete Modal
-    if (confirmDeleteUserBtn) {
-        confirmDeleteUserBtn.addEventListener('click', confirmUserDeletion);
-    } else {
-        console.warn("#confirmDeleteUserBtn not found.");
-    }
+    // Event Listeners for Modals
+    if (addNewUserBtn) addNewUserBtn.addEventListener('click', openAddUserModal);
+    else console.warn("#addNewUserBtn not found.");
 
-    // Update Modal
-    if (updateUserForm) {
-        updateUserForm.addEventListener('submit', handleUpdateUserFormSubmit);
-    } else {
-        console.warn("#updateUserForm not found.");
-    }
+    if (addUserForm) addUserForm.addEventListener('submit', handleAddUserFormSubmit);
+    else console.warn("#addUserForm not found.");
 
-    // Close modals if clicking outside their content area
+    if (confirmDeleteUserBtn) confirmDeleteUserBtn.addEventListener('click', confirmUserDeletion);
+    else console.warn("#confirmDeleteUserBtn not found.");
+
+    if (updateUserForm) updateUserForm.addEventListener('submit', handleUpdateUserFormSubmit);
+    else console.warn("#updateUserForm not found.");
+
+    // Close modals on outside click
     window.addEventListener('click', (event) => {
-        if (event.target === deleteUserModal) {
-            closeDeleteModal();
-        }
-        if (event.target === updateUserModal) {
-            closeUpdateModal();
-        }
+        if (event.target === deleteUserModal) closeDeleteModal();
+        if (event.target === updateUserModal) closeUpdateModal();
+        if (event.target === addUserModal) closeAddUserModal();
     });
-    // --- End Attach Event Listeners ---
 
-
-    // --- Make action handlers globally accessible for inline onclick in renderUsers ---
+    // Make functions global for inline onclicks in renderUsers
     window.openUpdateUserModal = openUpdateUserModal;
     window.openDeleteModal = openDeleteModal;
-    // closeModal functions are already global if needed for 'X' button, but better to use event listeners
-    window.closeDeleteModal = closeDeleteModal; // For direct onclick on 'X'
-    window.closeUpdateModal = closeUpdateModal; // For direct onclick on 'X'
+    window.closeDeleteModal = closeDeleteModal; // For 'X' buttons
+    window.closeUpdateModal = closeUpdateModal; // For 'X' buttons
+    window.closeAddUserModal = closeAddUserModal; // For 'X' buttons
 
-
-    // --- Initial Fetch of Users ---
-    fetchAndRenderUsers();
+    fetchAndRenderUsers(); // Initial fetch
 });
