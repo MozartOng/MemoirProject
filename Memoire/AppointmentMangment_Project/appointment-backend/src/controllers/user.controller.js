@@ -17,14 +17,26 @@ const mapRoleToEnum = (roleString) => {
 };
 
 // Admin Only: Get all users (excluding other admins and passwords)
+// Updated to handle search by fullName or email
 exports.getAllUsers = async (req, res, next) => {
+    const searchTerm = req.query.search; // Get search term from query parameters
+    let whereClause = {
+        role: {
+            not: Role.ADMIN // Exclude all users with ADMIN role from this general list
+        }
+    };
+
+    // If a search term is provided, add conditions to the whereClause
+    if (searchTerm) {
+        whereClause.OR = [
+            { fullName: { contains: searchTerm, mode: 'insensitive' } }, // Case-insensitive search for full name
+            { email: { contains: searchTerm, mode: 'insensitive' } }    // Case-insensitive search for email
+        ];
+    }
+
     try {
         const users = await prisma.user.findMany({
-            where: {
-                role: {
-                    not: Role.ADMIN // Exclude all users with ADMIN role from this general list
-                }
-            },
+            where: whereClause, // Apply the whereClause which may include search conditions
             select: {
                 id: true,
                 fullName: true,
@@ -51,11 +63,9 @@ exports.getUserById = async (req, res, next) => {
     const userIdParam = req.params.id;
     const userId = parseInt(userIdParam);
 
-    // --- FIX: Validate that userId is a number ---
     if (isNaN(userId)) {
         return res.status(400).json({ message: `Invalid user ID format: "${userIdParam}". ID must be an integer.` });
     }
-    // --- End FIX ---
 
     try {
         const user = await prisma.user.findUnique({
@@ -70,8 +80,6 @@ exports.getUserById = async (req, res, next) => {
                     select: {
                         id: true,
                         name: true
-                        // location: true, // Consider adding if needed for display
-                        // status: true
                     }
                 }
             }
@@ -80,17 +88,6 @@ exports.getUserById = async (req, res, next) => {
         if (!user) {
             return res.status(404).json({ message: `User with ID ${userId} not found.` });
         }
-
-        // Optional: Security check if you want to prevent fetching details of ADMIN users
-        // even by other admins, though typically admins can manage other users.
-        // If the goal is to prevent non-admins from seeing admin details,
-        // the isAdmin middleware on the route should handle that.
-        // If an admin should not see another admin's details via this specific endpoint:
-        // if (user.role === Role.ADMIN && req.user.id !== userId && req.user.role === Role.ADMIN) {
-        //     return res.status(403).json({ message: "Admins can only fetch their own details via this specific user ID endpoint, or use a dedicated admin management tool/view." });
-        // }
-
-
         res.status(200).json(user);
     } catch (error) {
         console.error(`Error fetching user by ID ${userId}:`, error);
@@ -108,10 +105,8 @@ exports.updateUserById = async (req, res, next) => {
         return res.status(400).json({ message: `Invalid user ID format: "${userIdParam}". ID must be an integer.` });
     }
 
-    // projectIds will be an array of integers, or undefined if not changing projects
     const { fullName, email, role: roleString, companyName, projectIds } = req.body;
 
-    // Basic validation: At least one field to update must be present
     if (fullName === undefined && email === undefined && roleString === undefined && companyName === undefined && projectIds === undefined) {
         return res.status(400).json({ message: "At least one field must be provided for update (fullName, email, role, companyName, projectIds)." });
     }
@@ -123,15 +118,12 @@ exports.updateUserById = async (req, res, next) => {
     if (roleString) {
         const newRole = mapRoleToEnum(roleString);
         if (!newRole) return res.status(400).json({ message: `Invalid role specified: "${roleString}".` });
-        // Security: Prevent non-admins from escalating roles or changing to ADMIN
-        // This check assumes req.user.role is correctly populated by your auth middleware
         if (newRole === Role.ADMIN && (!req.user || req.user.role !== Role.ADMIN)) {
             return res.status(403).json({ message: "Not authorized to assign Admin role." });
         }
         dataToUpdate.role = newRole;
     }
 
-    // Handle project assignments:
     if (projectIds !== undefined) {
         if (!Array.isArray(projectIds) || !projectIds.every(id => Number.isInteger(parseInt(id)) && !isNaN(parseInt(id)))) {
             return res.status(400).json({ message: 'projectIds must be an array of valid integers.' });
@@ -147,17 +139,14 @@ exports.updateUserById = async (req, res, next) => {
             return res.status(404).json({ message: "User to update not found."});
         }
 
-        // Prevent changing role of an ADMIN user unless by another ADMIN.
-        // Also, an admin cannot demote themselves via this general update endpoint.
         if (existingUser.role === Role.ADMIN && dataToUpdate.role && dataToUpdate.role !== Role.ADMIN) {
-            if (!req.user || req.user.role !== Role.ADMIN) { // If updater is not an admin
+            if (!req.user || req.user.role !== Role.ADMIN) {
                  return res.status(403).json({ message: "Not authorized to change the role of an Admin user." });
             }
-            if (req.user.id === userIdToUpdate) { // If admin tries to demote themselves
+            if (req.user.id === userIdToUpdate) {
                 return res.status(403).json({ message: "Admins cannot change their own role via this endpoint."});
             }
         }
-
 
         if (email && email !== existingUser.email) {
             const emailTaken = await prisma.user.findUnique({ where: { email: email } });
@@ -167,8 +156,6 @@ exports.updateUserById = async (req, res, next) => {
             dataToUpdate.email = email;
         }
         
-        // dataToUpdate.updatedAt = new Date(); // Prisma automatically handles updatedAt
-
         const updatedUser = await prisma.user.update({
             where: { id: userIdToUpdate },
             data: dataToUpdate,
@@ -180,7 +167,7 @@ exports.updateUserById = async (req, res, next) => {
         res.status(200).json({ message: "User updated successfully", user: updatedUser });
     } catch (error) {
         console.error(`Error updating user ${userIdToUpdate}:`, error);
-        if (error.code === 'P2025') { // Record to update not found OR error in relational update (e.g. project ID in set not found)
+        if (error.code === 'P2025') {
             return res.status(400).json({ message: `Update failed: ${error.meta?.cause || 'User not found or invalid project ID for assignment.'}` });
         }
         if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
@@ -209,7 +196,7 @@ exports.getCurrentUserProfile = async (req, res, next) => {
                 }
             }
         });
-        if (!user) return res.status(404).json({ message: 'User profile not found.' }); // Should not happen if token is valid
+        if (!user) return res.status(404).json({ message: 'User profile not found.' });
         res.status(200).json(user);
     } catch (error) {
         console.error("Error fetching current user profile:", error);
@@ -240,7 +227,6 @@ exports.deleteUserById = async (req, res, next) => {
         if (!userToDelete) {
             return res.status(404).json({ message: "User to delete not found." });
         }
-        // Prevent deletion of other ADMIN users (important security measure)
         if (userToDelete.role === Role.ADMIN) {
             return res.status(403).json({ message: "Cannot delete other admin accounts." });
         }
@@ -251,10 +237,9 @@ exports.deleteUserById = async (req, res, next) => {
         res.status(200).json({ message: `User ${userToDelete.fullName || userIdToDelete} deleted successfully.` });
     } catch (error) {
         console.error(`Error deleting user ${userIdToDelete}:`, error);
-        if (error.code === 'P2025') { // Record to delete not found
+        if (error.code === 'P2025') {
             return res.status(404).json({ message: "User not found for deletion (perhaps already deleted)." });
         }
-        // P2003: Foreign key constraint failure (e.g., user has appointments and onDelete is Restrict)
         if (error.code === 'P2003') {
             return res.status(400).json({ message: "Cannot delete user: User has related records (e.g., appointments) that prevent deletion."});
         }
@@ -263,8 +248,6 @@ exports.deleteUserById = async (req, res, next) => {
 };
 
 // New: Get users assignable to projects (e.g., for admin project forms)
-// This could be similar to getAllUsers but might have different filtering or selection.
-// For now, let's assume it's the same as getAllUsers (non-admins).
 exports.getAssignableUsers = async (req, res, next) => {
     try {
         const users = await prisma.user.findMany({
@@ -272,14 +255,13 @@ exports.getAssignableUsers = async (req, res, next) => {
                 role: {
                     not: Role.ADMIN
                 }
-                // You might add other filters, e.g., only active users
             },
             select: {
                 id: true,
                 fullName: true,
-                email: true, // Optional, maybe not needed for just assignment list
-                role: true,   // Good for display in the list
-                companyName: true // Good for display
+                email: true,
+                role: true,
+                companyName: true
             },
             orderBy: {
                 fullName: 'asc'
@@ -292,39 +274,30 @@ exports.getAssignableUsers = async (req, res, next) => {
     }
 };
 
-
-// This function was in your previous project.controller.js, but seems more user-related.
-// It's for fetching projects for the *currently authenticated user* for dropdowns.
-// If you have a similar one in project.controller.js for general project selection, that's fine.
-// This one is specifically for "my projects for booking".
 exports.getAssignedProjectsForCurrentUser = async (req, res, next) => {
     if (!req.user || req.user.id === undefined) {
         return res.status(401).json({ message: 'Authentication required.' });
     }
     const userId = req.user.id;
-    const userRole = req.user.role; // Role from authenticated token
+    const userRole = req.user.role;
 
     let projectWhereClause = {};
 
-    // Role-specific status filtering for project selection
     if (userRole === Role.CONTRACTOR) {
-        projectWhereClause.status = 'ONGOING'; // Contractors see only ONGOING projects
+        projectWhereClause.status = 'ONGOING';
     } else if (userRole === Role.OWNER || userRole === Role.ENGINEERING || userRole === Role.LAB) {
-        // These roles might see PLANNED and ONGOING projects
         projectWhereClause.OR = [
             { status: 'ONGOING' },
             { status: 'PLANNED' }
         ];
     }
-    // Admins, if they use this endpoint, would see all statuses of their assigned projects by default
-    // unless specific logic is added here for admins.
 
     try {
         const userWithProjects = await prisma.user.findUnique({
             where: { id: userId },
             select: {
                 projects: {
-                    where: projectWhereClause, // Apply status filter
+                    where: projectWhereClause,
                     select: { id: true, name: true, location: true, status: true },
                     orderBy: { name: 'asc' }
                 }

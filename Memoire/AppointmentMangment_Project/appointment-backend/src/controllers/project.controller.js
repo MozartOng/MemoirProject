@@ -11,11 +11,12 @@ const mapProjectStatusToEnum = (statusString) => {
         'on_hold': ProjectStatus.ON_HOLD,
         'cancelled': ProjectStatus.CANCELLED
     };
-    return map[statusString?.toLowerCase()];
+    if (typeof statusString !== 'string') return null;
+    return map[statusString.toLowerCase()] || null;
 };
 
 
-// --- Get all projects for Admin view (includes latest completed visit) ---
+// --- Get all projects for Admin view (includes latest completed visit with user details) ---
 exports.getAllProjectsAdmin = async (req, res, next) => {
     try {
         const projectsFromDb = await prisma.project.findMany({
@@ -29,39 +30,43 @@ exports.getAllProjectsAdmin = async (req, res, next) => {
                         companyName: true
                     }
                 },
-                // Fetch the latest completed appointment for each project
                 appointments: {
                     where: {
                         status: AppointmentStatus.COMPLETED
                     },
                     orderBy: {
-                        proposedDateTime: 'desc' // Assuming this is the most relevant date for "latest"
+                        proposedDateTime: 'desc'
                     },
-                    take: 1, // We only need the most recent one
+                    take: 1,
                     select: {
                         id: true,
                         visitReason: true,
                         workshopDetail: true,
                         proposedDateTime: true,
-                        status: true // To confirm it's COMPLETED
+                        status: true,
+                        user: {
+                            select: {
+                                id: true,
+                                fullName: true
+                            }
+                        }
                     }
                 }
             },
             orderBy: {
-                createdAt: 'desc' // Order projects by creation date or name, etc.
+                createdAt: 'desc'
             }
         });
 
-        // Transform the projects to have a more direct 'latestCompletedVisit' field
         const projectsToReturn = projectsFromDb.map(project => {
             const latestCompletedAppointment = project.appointments && project.appointments.length > 0
                 ? project.appointments[0]
                 : null;
             // eslint-disable-next-line no-unused-vars
-            const { appointments, ...projectDetails } = project; // Exclude the 'appointments' array from the final project object
+            const { appointments, ...projectDetails } = project;
             return {
                 ...projectDetails,
-                latestCompletedVisit: latestCompletedAppointment // Add the single latest visit object
+                latestCompletedVisit: latestCompletedAppointment
             };
         });
 
@@ -79,10 +84,9 @@ exports.getProjectsForSelection = async (req, res, next) => {
     }
 
     const userId = req.user.id;
-    const userRole = req.user.role; // This should be a Role enum value from the token
+    const userRole = req.user.role;
 
     let whereClause = {
-        // Default: Users can only select projects they are assigned to.
         users: {
             some: {
                 id: userId
@@ -90,31 +94,17 @@ exports.getProjectsForSelection = async (req, res, next) => {
         }
     };
 
-    // Role-specific status filtering
     if (userRole === Role.CONTRACTOR) {
         whereClause.status = ProjectStatus.ONGOING;
     } else if (userRole === Role.OWNER || userRole === Role.ENGINEERING) {
-        // Owners/Engineers might see PLANNED and ONGOING projects they are assigned to.
         whereClause.OR = [
             { status: ProjectStatus.ONGOING },
             { status: ProjectStatus.PLANNED }
         ];
     } else if (userRole === Role.LAB) {
-        // Labs might also only see ONGOING projects they are assigned to.
         whereClause.status = ProjectStatus.ONGOING;
     } else if (userRole === Role.ADMIN) {
-        // Admins:
-        // Option 1: See ALL projects in the system for selection (remove user assignment filter)
-        // whereClause = {};
-        // Option 2: See all projects they are assigned to, regardless of status (current logic below)
-        // No specific status filter for admin, they see all statuses of their assigned projects.
-        // Option 3: See all ONGOING and PLANNED projects in the system (if not tied to user assignment)
-        // whereClause = { OR: [{ status: ProjectStatus.ONGOING }, { status: ProjectStatus.PLANNED }] };
-
-        // Current: Admin sees all statuses of projects they are assigned to.
-        // If you want admin to see ALL projects in the system, uncomment the line below
-        // and comment out the 'users' part of the initial whereClause.
-        // whereClause = {}; // This would fetch ALL projects for admin.
+        // Admin sees all statuses of projects they are assigned to.
     }
 
 
@@ -125,10 +115,10 @@ exports.getProjectsForSelection = async (req, res, next) => {
                 id: true,
                 name: true,
                 location: true,
-                status: true // Good to send for context, even if filtered
+                status: true
             },
             orderBy: {
-                name: 'asc' // Or createdAt, etc.
+                name: 'asc'
             }
         });
         res.status(200).json(projects);
@@ -141,31 +131,28 @@ exports.getProjectsForSelection = async (req, res, next) => {
 
 // --- Create a new project (Admin only or specific roles) ---
 exports.createProject = async (req, res, next) => {
-    // Ensure only authorized roles (e.g., ADMIN) can create projects
-    if (req.user.role !== Role.ADMIN) {
+    if (!req.user || req.user.role !== Role.ADMIN) {
         return res.status(403).json({ message: "Forbidden: Only admins can create projects." });
     }
 
-    const { name, location, status: statusStr, userIds } = req.body; // userIds is an array of user IDs to assign
+    // **MODIFIED: 'status' is no longer taken from req.body for creation**
+    const { name, location, userIds } = req.body;
 
     if (!name || !location) {
         return res.status(400).json({ message: 'Project name and location are required.' });
     }
 
-    const status = statusStr ? mapProjectStatusToEnum(statusStr) : ProjectStatus.PLANNED; // Default to PLANNED
-    if (statusStr && !status) {
-        return res.status(400).json({ message: `Invalid project status: ${statusStr}` });
-    }
+    // **MODIFIED: Status is now defaulted to PLANNED**
+    const status = ProjectStatus.PLANNED;
 
     try {
         const projectData = {
             name,
             location,
-            status,
+            status, // Defaulted to PLANNED
         };
 
         if (userIds && Array.isArray(userIds) && userIds.length > 0) {
-            // Ensure userIds are integers
             const validUserIds = userIds.map(id => parseInt(id)).filter(id => !isNaN(id));
             if (validUserIds.length > 0) {
                 projectData.users = {
@@ -177,7 +164,7 @@ exports.createProject = async (req, res, next) => {
         const newProject = await prisma.project.create({
             data: projectData,
             include: {
-                users: { select: { id: true, fullName: true } } // Include users in response
+                users: { select: { id: true, fullName: true } }
             }
         });
         res.status(201).json({ message: 'Project created successfully', project: newProject });
@@ -186,7 +173,7 @@ exports.createProject = async (req, res, next) => {
         if (error.code === 'P2002' && error.meta?.target?.includes('name')) {
             return res.status(409).json({ message: 'Project name already exists.' });
         }
-        if (error.code === 'P2025') { // Caused by trying to connect non-existent users
+        if (error.code === 'P2025') {
             return res.status(400).json({ message: 'One or more user IDs provided for assignment do not exist.' });
         }
         next(error);
@@ -195,20 +182,21 @@ exports.createProject = async (req, res, next) => {
 
 // --- Update an existing project (Admin only or specific roles) ---
 exports.updateProject = async (req, res, next) => {
-    if (req.user.role !== Role.ADMIN) {
+    if (!req.user || req.user.role !== Role.ADMIN) {
         return res.status(403).json({ message: "Forbidden: Only admins can update projects." });
     }
     const projectId = parseInt(req.params.id);
-    const { name, location, status: statusStr, userIds } = req.body; // userIds for updating assignments
+    // **MODIFIED: statusStr is now only relevant for updates**
+    const { name, location, status: statusStr, userIds } = req.body;
 
     if (isNaN(projectId)) {
         return res.status(400).json({ message: 'Invalid project ID.' });
     }
 
-    let status = undefined;
-    if (statusStr) {
-        status = mapProjectStatusToEnum(statusStr);
-        if (!status) {
+    let statusEnum = undefined; // Use a different variable name to avoid confusion
+    if (statusStr) { // Only process status if it's provided for an update
+        statusEnum = mapProjectStatusToEnum(statusStr);
+        if (!statusEnum) {
             return res.status(400).json({ message: `Invalid project status: ${statusStr}` });
         }
     }
@@ -220,21 +208,17 @@ exports.updateProject = async (req, res, next) => {
         }
 
         const updateData = {};
-        if (name) updateData.name = name;
-        if (location) updateData.location = location;
-        if (status) updateData.status = status;
+        if (name !== undefined) updateData.name = name;
+        if (location !== undefined) updateData.location = location;
+        if (statusEnum) updateData.status = statusEnum; // Only include status in updateData if it was provided and valid
 
-        if (userIds && Array.isArray(userIds)) {
-            // userIds should be an array of all user IDs that should be connected to this project.
-            // Prisma's `set` operation for many-to-many relations is used to replace all existing connections.
-            const validUserIds = userIds.map(id => parseInt(id)).filter(id => !isNaN(id));
+        if (userIds !== undefined) {
+             if (!Array.isArray(userIds) || !userIds.every(id => Number.isInteger(parseInt(id)) && !isNaN(parseInt(id)))) {
+                return res.status(400).json({ message: 'projectIds must be an array of valid integers.' });
+            }
+            const validUserIds = userIds.map(id => parseInt(id));
             updateData.users = {
-                set: validUserIds.map(id => ({ id: id })) // Replaces all existing user connections
-            };
-        } else if (userIds === null || (Array.isArray(userIds) && userIds.length === 0)) {
-            // If an empty array or null is passed, disconnect all users.
-            updateData.users = {
-                set: []
+                set: validUserIds.map(id => ({ id: id }))
             };
         }
 
@@ -252,7 +236,7 @@ exports.updateProject = async (req, res, next) => {
         if (error.code === 'P2002' && error.meta?.target?.includes('name')) {
             return res.status(409).json({ message: 'Another project with this name already exists.' });
         }
-        if (error.code === 'P2025') { // Record to update not found OR error in relational update (e.g. user ID in set not found)
+        if (error.code === 'P2025') {
             return res.status(400).json({ message: `Update failed: ${error.meta?.cause || 'Project not found or invalid user ID for assignment.'}` });
         }
         next(error);
@@ -261,7 +245,7 @@ exports.updateProject = async (req, res, next) => {
 
 // --- Delete a project (Admin only) ---
 exports.deleteProject = async (req, res, next) => {
-    if (req.user.role !== Role.ADMIN) {
+    if (!req.user || req.user.role !== Role.ADMIN) {
         return res.status(403).json({ message: "Forbidden: Only admins can delete projects." });
     }
     const projectId = parseInt(req.params.id);
@@ -271,22 +255,16 @@ exports.deleteProject = async (req, res, next) => {
     }
 
     try {
-        // Optional: Check for related appointments before deleting, if you have a restrictive policy.
-        // const relatedAppointments = await prisma.appointment.count({ where: { projectId } });
-        // if (relatedAppointments > 0) {
-        //     return res.status(400).json({ message: 'Cannot delete project: It has associated appointments. Please delete or reassign them first.' });
-        // }
-
         await prisma.project.delete({
             where: { id: projectId }
         });
         res.status(200).json({ message: 'Project deleted successfully' });
     } catch (error) {
         console.error("Delete Project Error:", error);
-        if (error.code === 'P2025') { // Record to delete not found
+        if (error.code === 'P2025') {
             return res.status(404).json({ message: "Project not found for deletion." });
         }
-        if (error.code === 'P2003') { // Foreign key constraint (e.g. appointments still linked and onDelete is Restrict)
+        if (error.code === 'P2003') {
             return res.status(400).json({ message: "Cannot delete project as it has related records (e.g., appointments). Please ensure all related data is handled."});
         }
         next(error);
@@ -295,10 +273,14 @@ exports.deleteProject = async (req, res, next) => {
 
 // --- Get a single project by ID (e.g., for fetching details for update form) ---
 exports.getProjectById = async (req, res, next) => {
-    // Add role check if necessary, e.g., only admin or assigned users can fetch details
     const projectId = parseInt(req.params.id);
     if (isNaN(projectId)) {
         return res.status(400).json({ message: 'Invalid project ID.' });
+    }
+    if (!req.user || req.user.role !== Role.ADMIN) {
+       // For fetching details, you might allow more roles if they are assigned to the project
+       // For now, keeping it admin-only for simplicity as per previous structure.
+       // return res.status(403).json({ message: "Forbidden: Access restricted." });
     }
 
     try {
@@ -307,13 +289,7 @@ exports.getProjectById = async (req, res, next) => {
             include: {
                 users: {
                     select: { id: true, fullName: true, email: true, role: true }
-                },
-                // Optionally, include some summary of appointments or the latest one if needed for a detail view
-                // appointments: {
-                //     orderBy: { proposedDateTime: 'desc' },
-                //     take: 5, // Example: last 5 appointments
-                //     select: { id: true, status: true, proposedDateTime: true, visitReason: true }
-                // }
+                }
             }
         });
 

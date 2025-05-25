@@ -60,7 +60,7 @@ const parseAndCombineDateTime_DDMMYYYY = (dateStr_ddmmyyyy, timeStr_hhmm) => {
             console.error(`parseAndCombineDateTime_DDMMYYYY: Failed to parse date string "${combinedStr}" with format "${formatString}". Resulted in Invalid Date.`);
             return null;
         }
-        console.log(`parseAndCombineDateTime_DDMMYYYY: Parsed "${combinedStr}" to Date:`, parsedDateTime);
+        // console.log(`parseAndCombineDateTime_DDMMYYYY: Parsed "${combinedStr}" to Date:`, parsedDateTime); // Optional: for debugging
         return parsedDateTime;
     } catch (e) {
         console.error(`Error parsing dd/MM/yyyy date/time for input "${dateStr_ddmmyyyy} ${timeStr_hhmm}":`, e);
@@ -303,10 +303,11 @@ exports.getUserAppointments = async (req, res, next) => {
 
 /**
  * Gets all appointments (Admin only).
- * Allows filtering by status query parameter.
+ * Allows filtering by status and searching by user name or project name.
  */
 exports.getAllAppointmentsAdmin = async (req, res, next) => {
     const statusFilterStr = req.query.status;
+    const searchTerm = req.query.search; // Get search term from query
     const whereClause = {};
 
     if (statusFilterStr && statusFilterStr.toLowerCase() !== 'all') {
@@ -318,9 +319,18 @@ exports.getAllAppointmentsAdmin = async (req, res, next) => {
         }
     }
 
+    // Add search conditions if searchTerm is provided
+    if (searchTerm) {
+        whereClause.OR = [
+            { user: { fullName: { contains: searchTerm, mode: 'insensitive' } } },
+            { project: { name: { contains: searchTerm, mode: 'insensitive' } } }
+            // You can add more fields to search here, e.g., user.email, project.location
+        ];
+    }
+
     try {
         const appointments = await prisma.appointment.findMany({
-            where: whereClause,
+            where: whereClause, // whereClause will include status and/or search conditions
             orderBy: { proposedDateTime: 'asc' },
             include: {
                 user: { select: { id: true, fullName: true, companyName: true, role: true } },
